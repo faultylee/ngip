@@ -27,7 +27,7 @@ So far I've been keeping this project at the back of my head, though I did exper
 
 ## Proposed Setup
 
-#### Platform
+### Platform
 
 AWS, this is part of the requirement. It does fit my design of doing a SPA hosting it on S3 as static page. Static website hosting on Azure Storage only recently in public preview, as of June 2018.
 
@@ -44,15 +44,16 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 - Let's Encrypt for SSL.
 - Gunicorn as wsgi for Django.
 
-#### Application
+### Application
 
-Front-end, 3 SPA pages using Vue.js
-- Landing page
-- User Dashboard
-- Admin Dashboard
+#### Front-end
+- 3 SPA pages using Vue.js
+  - Landing page
+  - User Dashboard
+  - Admin Dashboard
 *Note: Vue.js is on the list of web framework I wanted to learn.
 
-Backend
+#### Backend
 - Django + Celery
 - REST endpoint for SPA
   - Landing Page stats
@@ -64,14 +65,14 @@ Backend
     - Tasks queue
     - Load stats
 
-Backend Tasks
+#### Backend Tasks
 - Monitoring lapse ping
 - Updating of last ping time
 - Validation of ping data
 - Deactiving expired checks
 - Notification
 
-CI Pipeline
+#### CI Pipeline
 - Build
 - Test
 - Deploy to testing environment
