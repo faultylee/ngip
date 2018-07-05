@@ -2,7 +2,7 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This is an hosted application which works like uptime monitoring tools, but the ping direction is in reverse. The main purpose is to detect uptime of intranet application which doesn't expose any end point to the internet, but are able to send short packets to `ngip.io`. 
+This will be an hosted application which works like uptime monitoring tools, but the ping direction is in reverse. The main purpose is to detect uptime of intranet application which doesn't expose any end point to the internet, but are able to send short packets to `ngip.io`. 
 
 ## Table of Contents
 
@@ -24,6 +24,8 @@ This application will expect pings from the any application that can access `ngi
 As for the name, initially it was *Reverse Ping* which was long and rather lame. My friend suggested *ngip* which he said sounded like the reverse of ping. I kinda like it and went with it. He gave his blessing on using the name for this project :)
 
 So far I've been keeping this project at the back of my head, though I did experiement with Azure Function as a possible way to host this. My recent interview with a company help push this idea to execution. Due to the distance and risk involved, as I'm the sole bread winner, we mutually agreed to lower the employement risk by having me do a take-home project to prove my technical capability. `ngip` does fit the bill with some tweaks.
+
+Upon completion, this application will be hosted and free for anyone to use provided I can affort the AWS bill. I'll continue to fix bug and make it run more effeciently. Since it is opensourced, anyone can host this on their own.
 
 ## Proposed Setup
 
