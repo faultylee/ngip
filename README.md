@@ -2,7 +2,14 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This will be an hosted application which works like uptime monitoring tools, but the ping direction is in reverse. The main purpose is to detect uptime of intranet application which doesn't expose any end point to the internet, but are able to send short packets to `ngip.io`. 
+This will be an hosted application which works like other uptime monitoring tools, but the ping direction is in reverse. The main purpose is to detect uptime of intranet application which doesn't expose any end point to the internet, but are able to access `ngip.io`. 
+
+Typical monitoring use cases are:
+- SME/SOHO Intranet Server
+- internal DVR system
+- IoT hub
+- IoT sensors
+- Presense of certain Wifi devices
 
 ## Table of Contents
 
@@ -17,15 +24,15 @@ This will be an hosted application which works like uptime monitoring tools, but
 
 ## Background
 
-I came about having this idea when developing an in-house application. It's a somewhat critical application which needs to run 24x7. There's internal monitoring tools from a different team which I could make use of, but going through the process and also segregating the dashboard and notification proof too much hassle. Plus when our internet connectivity is down, i.e. when there's a blackout over the weekend, notification will not arrive.
+I came about having this idea while developing an in-house application. It's a somewhat critical application which needs to run 24x7. There's internal monitoring tools from a different team which I could make use of, but going through the process and also segregating the dashboard and notification proof too much hassle. Another common problem is power outages, which affect the internet connectivity resulting in missed alerts. 
 
-This application will expect pings from the any application that can access `ngip.io`, and after the ping lapse for a pre-defined duration, a notification is send. The pings can also include primitive data such as temperature, status code ...etc which will be included in the simple validation logic to also send notification when the value is out of bound.
+This application will expect pings from the any application that can connect to `ngip.io`, and after the ping lapse for a pre-defined duration, a notification is sent. The pings can also include primitive data such as temperature, status code ...etc which will be included in the simple validation logic which send notification when the value is outside the configured range.
 
-As for the name, initially it was *Reverse Ping* which was long and rather lame. My friend suggested *ngip* which he said sounded like the reverse of ping. I kinda like it and went with it. He gave his blessing on using the name for this project :)
+As for the name, initially it was *Reverse Ping* which was long and rather lame. My friend suggested *ngip* which he said sounded like the reverse of ping. The name clicked and I went with it. He did give his blessing on using the name for this project :)
 
-So far I've been keeping this project at the back of my head, though I did experiement with Azure Function as a possible way to host this. My recent interview with a company help push this idea to execution. Due to the distance and risk involved, as I'm the sole bread winner, we mutually agreed to lower the employement risk by having me do a take-home project to prove my technical capability. `ngip` does fit the bill with some tweaks.
+So far I've been keeping this project at the back of my head, though I did experiement with Azure Function as a possible cheap and scalable way to host this. My recent interview with a company help push this idea to execution. As a win-win solution which save time and reduce risk for both party, we mutually agreed to do a take-home project to prove my technical capability. `ngip` does fit the bill with some tweaks from my original plan.
 
-Upon completion, this application will be hosted and free for anyone to use provided I can affort the AWS bill. I'll continue to fix bug and make it run more effeciently. Since it is opensourced, anyone can host this on their own.
+Upon completion, this application will be hosted on AWS and free for anyone to use so long as the AWS bill is affordable. I'll continue to fix bug and make it run more effeciently. Since it is opensourced, anyone can host this on their own.
 
 ## Proposed Setup
 
