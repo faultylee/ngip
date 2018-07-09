@@ -46,6 +46,7 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 - AWS Lambda as ping endpoint
 - AWS ELB to load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up.
 - AWS S3 to host SPA static website.
+- AWS Redis for caching
 - AWS SQS for Celery backend and to allow scaling of backend async tasks.
 - AWS SES for emailing of signin token and notification.
 - AWS RDS as persistant storage.
@@ -84,6 +85,13 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 - Validation of ping data
 - Deactiving expired checks
 - Notification
+
+#### Monitoring
+- ELK to monitor & analyze: *This is something I've wanted to learn as part of SIEM for InfoSec, though it's for DevOps here*
+  - Application Logs
+  - CloudWatch Logs
+  - ELB Access Logs
+  - CI Logs
 
 #### CI Pipeline
 - Build
