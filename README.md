@@ -40,25 +40,32 @@ Upon completion, this application will be hosted on AWS and free for anyone to u
 
 ### Platform
 
-AWS, this is part of the requirement. It does fit my design of doing a SPA hosting it on S3 as static page.
+AWS, this is part of the requirement. It does fit my design of doing a SPA hosting it on S3 as static page. Most of the components will be orchestrated using Chef and Jenkins.
 
-- AWS EC2 to host background worker and service endpoint. Will be orchestrated using Chef Automate and Jenkins.
-- AWS Lambda as ping endpoint
-- AWS ELB to load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up.
-- AWS S3 to host SPA static website.
-- AWS Redis for caching
-- AWS SQS for Celery backend and to allow scaling of backend async tasks.
-- AWS SES for emailing of signin token and notification.
-- AWS RDS as persistant storage.
-- AWS Route53 as DNS
-- Debian due to my familiarity.
-- Docker to isolate Django and Celery Workers.
-- Jenkins for CI.
-- Chef for Orchestration.
-- Let's Encrypt for SSL.
-- Gunicorn as wsgi for Django.
+| Technology             | Purpose                                                                                                 | Reason                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| AWS EC2                | Running Django REST and Celery workers                                                                  | As per requirement                                                    |
+| AWS Lambda             | Ping endpoint                                                                                           | scale-able and cost effective                                         |
+| AWS ELB                | Load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up. | As per requirement, to utilize auto scaling                           |
+| AWS S3                 | SPA static website                                                                                      | scale-able and cost effective                                         |
+| AWS Redis              | Application in memory caching, broker for Celery                                                        | Prior experience                                                      |
+| AWS SQS                | Message queue for async tasks, using queue length to judge scaling behavior or overall health           | Prior experience in using MQTT to scale async tasks                   |
+| AWS SES                | Sending email alert and notification                                                                    | Avoid reinventing the wheel, one less component to maintain           |
+| AWS RDS for PostgreSQL | Persistent storage                                                                                      | Prior experience                                                      |
+| AWS Route53            | DNS management                                                                                          | Possible future multi-region failover                                 |
+| AWS ECS or Docker      | Possibly to host Celery workers                                                                         | As per requirement                                                    |
+| AWS Opsworks Chef      | Overall solution orchestration                                                                          | Currently learning and would like to gain experience in               |
+| AWS CloudFormation     | Template for production, staging and test environment                                                   | Easier than using script to setup environment                         |
+| Jenkins                | CI/CD                                                                                                   | As per requirement, similar to Gitlab CI which I have experience with |
 
 ### Application
+
+| Technology             | Purpose                                                                                                 | Reason                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Vue.js                 | Front-end client side web framework                                                                     | A web framework in my to-learn list. Small, easier to learn, and good performance. |
+| Django                 | Back-end framework                                                                                      | Prior experience, fast delivery                                                    |
+| Celery                 | Async tasks and background worker                                                                       | Prior experience                                                                   |
+| ELK                    | Collect and analyze logs                                                                                | A technology stack in my to-learn list, especially useful for SIEM in InfoSec      |
 
 #### Front-end
 - 3 SPA pages using Vue.js
@@ -84,7 +91,7 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 - Updating of last ping time
 - Validation of ping data
 - Deactiving expired checks
-- Notification
+- Alert and notification
 
 #### Monitoring
 - ELK to monitor & analyze: *This is something I've wanted to learn as part of SIEM for InfoSec, though it's for DevOps here*
