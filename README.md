@@ -32,7 +32,7 @@ As for the name, initially it was *Reverse Ping* which was long and rather lame.
 
 So far I've been keeping this project at the back of my head, though I did experiment with Azure Function as a possible cheap and scalable way to host this. My original plan for `ngip` was to use Azure Storage to serve a SPA built using Vue.js. Azure Function as the API endpoint for the pings, REST endpoint for the user dashboard and notification/alert sender. Redis as in memory data store and Blob Storage as persistent data store. Container or Compute as the backend worker for periodic checking and cleanup. 
 
-My recent interview with a company help push this idea to execution. As a win-win solution which save time and reduce risk for both party, we mutually agreed to do a take-home project to demonstrate my technical capability. `ngip` does fit the bill with some tweaks, mainly switching to AWS and paying more attention to IaC.
+My recent interview with a company help push this idea to execution. As a win-win solution which save time and reduce risk for both party, we mutually agreed to do a take-home project to demonstrate my understanding of end to end architecture. `ngip` does fit the bill with some tweaks, mainly switching to AWS and paying more attention to IaC. I'm also using this project to learn more about DevOps and IaC.
 
 Upon completion, this application will be hosted on AWS and free for anyone to use so long as the AWS bill remain affordable. I'll continue to fix bug and make it run more efficiently. I might also consider making this cloud agnostic or at least support another provider.
 
