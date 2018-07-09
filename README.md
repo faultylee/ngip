@@ -42,21 +42,22 @@ Upon completion, this application will be hosted on AWS and free for anyone to u
 
 AWS, this is part of the requirement. It does fit my design of doing a SPA hosting it on S3 as static page. Most of the components will be orchestrated using Chef and Jenkins.
 
-| Technology             | Purpose                                                                                                 | Reason                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| AWS EC2                | Running Django REST and Celery workers                                                                  | As per requirement                                                    |
-| AWS Lambda             | Ping endpoint                                                                                           | scale-able and cost effective                                         |
-| AWS ELB                | Load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up. | As per requirement, to utilize auto scaling                           |
-| AWS S3                 | SPA static website                                                                                      | scale-able and cost effective                                         |
-| AWS Redis              | Application in memory caching, broker for Celery                                                        | Prior experience                                                      |
-| AWS SQS                | Message queue for async tasks, using queue length to judge scaling behavior or overall health           | Prior experience in using MQTT to scale async tasks                   |
-| AWS SES                | Sending email alert and notification                                                                    | Avoid reinventing the wheel, one less component to maintain           |
-| AWS RDS for PostgreSQL | Persistent storage                                                                                      | Prior experience                                                      |
-| AWS Route53            | DNS management                                                                                          | Possible future multi-region failover                                 |
-| AWS ECS or Docker      | Possibly to host Celery workers                                                                         | As per requirement                                                    |
-| AWS Opsworks Chef      | Overall solution orchestration                                                                          | Currently learning and would like to gain experience in               |
-| AWS CloudFormation     | Template for production, staging and test environment                                                   | Easier than using script to setup environment                         |
-| Jenkins                | CI/CD                                                                                                   | As per requirement, similar to Gitlab CI which I have experience with |
+| Technology             | Purpose                                                                                                 | Reason                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| AWS EC2                | Running Django REST and Celery workers                                                                  | As per requirement                                                                 |
+| AWS Lambda             | Ping endpoint                                                                                           | scale-able and cost effective                                                      |
+| AWS ELB                | Load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up. | As per requirement, to utilize auto scaling                                        |
+| AWS CloudFront         | CDN for S3                                                                                              | scale-able and cost effective                                                      |
+| AWS S3                 | SPA static website                                                                                      | scale-able and cost effective                                                      |
+| AWS Redis              | Application in memory caching, broker for Celery                                                        | Prior experience                                                                   |
+| AWS SQS                | Message queue for async tasks, using queue length to judge scaling behavior or overall health           | Prior experience in using MQTT to scale async tasks                                |
+| AWS SES                | Sending email alert and notification                                                                    | Avoid reinventing the wheel, one less component to maintain                        |
+| AWS RDS for PostgreSQL | Persistent storage                                                                                      | Prior experience                                                                   |
+| AWS Route53            | DNS management                                                                                          | Possible future multi-region failover                                              |
+| AWS ECS or Docker      | Possibly to host Celery workers                                                                         | As per requirement                                                                 |
+| AWS Opsworks Chef      | Overall solution orchestration                                                                          | Currently learning and would like to gain experience in                            |
+| AWS CloudFormation     | Template for production, staging and test environment                                                   | Easier than using script to setup environment                                      |
+| Jenkins                | CI/CD                                                                                                      | As per requirement, similar to Gitlab CI which I have experience with              |
 
 ### Application
 
