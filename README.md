@@ -26,11 +26,11 @@ Typical monitoring use cases are:
 
 I came about having this idea while developing an in-house application. It's a somewhat critical application which needs to run 24x7. There's internal monitoring tools from a different team which I could make use of, but going through the process and segregating the dashboard and notification prove too much hassle. Another common problem is power outages, which affect the internet connectivity resulting in missed alerts. 
 
-This application will expect pings from the any application that can connect to `ngip.io`, and after the ping lapse for a pre-defined duration, a notification is sent. The pings can also include primitive data such as temperature, status code ...etc which will be included in the simple validation logic which send notification when the value is outside the configured range.
+This application will expect pings from the any application that can connect to `ngip.io`, and after the ping lapse for a predefined duration, a notification is sent. The pings can also include primitive data such as temperature, status code ...etc which will be included in the simple validation logic which send notification when the value is outside the configured range.
 
 As for the name, initially it was *Reverse Ping* which was long and rather lame. My friend suggested *ngip* which he said sounded like the reverse of ping. The name clicked and I went with it. He did give his blessing on using the name for this project :)
 
-So far I've been keeping this project at the back of my head, though I did experiment with Azure Function as a possible cheap and scalable way to host this. My original plan for `ngip` was to use Azure Storage to serve a SPA built using Vue.js. Azure Function as the API endpoint for the pings, REST endpoint for the user dashboard and notification/alert sender. Redis as in memory data store and Blob Storage as persistent data store. Container or Compute as the backend worker for periodic checking and cleanup. 
+So far, I've been keeping this project at the back of my head, though I did experiment with Azure Function as a possible cheap and scalable way to host this. My original plan for `ngip` was to use Azure Storage to serve a SPA built using Vue.js. Azure Function as the API endpoint for the pings, REST endpoint for the user dashboard and notification/alert sender. Redis as in memory data store and Blob Storage as persistent data store. Container or Compute as the back-end worker for periodic checking and cleanup. 
 
 My recent interview with a company help push this idea to execution. As a win-win solution which save time and reduce risk for both party, we mutually agreed to do a take-home project to demonstrate my understanding of end to end architecture. `ngip` does fit the bill with some tweaks, mainly switching to AWS and paying more attention to IaC. I'm also using this project to learn more about DevOps and IaC.
 
@@ -50,20 +50,19 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 | AWS CloudFront         | CDN for S3                                                                                              | scale-able and cost effective                                                      |
 | AWS S3                 | SPA static website                                                                                      | scale-able and cost effective                                                      |
 | AWS Redis              | Application in memory caching, broker for Celery                                                        | Prior experience                                                                   |
-| AWS SQS                | Message queue for async tasks, using queue length to judge scaling behavior or overall health           | Prior experience in using MQTT to scale async tasks                                |
+| AWS SQS                | Message queue for async tasks, using queue length to judge scaling behavior or overall health           | Prior experiences in using MQTT to scale async tasks                                |
 | AWS SES                | Sending email alert and notification                                                                    | Avoid reinventing the wheel, one less component to maintain                        |
 | AWS RDS for PostgreSQL | Persistent storage                                                                                      | Prior experience                                                                   |
 | AWS Route53            | DNS management                                                                                          | Possible future multi-region failover                                              |
 | AWS ECS or Docker      | Possibly to host Celery workers                                                                         | As per requirement                                                                 |
 | AWS Opsworks Chef      | Overall solution orchestration                                                                          | Currently learning and would like to gain experience in                            |
-| AWS CloudFormation     | Template for production, staging and test environment                                                   | Easier than using script to setup environment                                      |
 | Jenkins                | CI/CD                                                                                                      | As per requirement, similar to Gitlab CI which I have experience with              |
 
 ### Application
 
 | Technology             | Purpose                                                                                                 | Reason                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Vue.js                 | Front-end client side web framework                                                                     | A web framework in my to-learn list. Small, easier to learn, and good performance. |
+| Vue.js                 | Front-end client-side web framework                                                                     | A web framework in my to-learn list. Small, easier to learn, and good performance. |
 | Django                 | Back-end framework                                                                                      | Prior experience, fast delivery                                                    |
 | Celery                 | Async tasks and background worker                                                                       | Prior experience                                                                   |
 | ELK                    | Collect and analyze logs                                                                                | A technology stack in my to-learn list, especially useful for SIEM in InfoSec      |
@@ -75,7 +74,7 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
   - Admin Dashboard
 *Note: Vue.js is on the list of web framework I wanted to learn.
 
-#### Backend
+#### Back-end
 - Django + Celery
 - REST endpoint for SPA
   - Landing Page stats
@@ -87,11 +86,11 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
     - Tasks queue
     - Load stats
 
-#### Backend Tasks
+#### Back-end Tasks
 - Monitoring lapse ping
 - Updating of last ping time
 - Validation of ping data
-- Deactiving expired checks
+- Deactivating expired checks
 - Alert and notification
 
 #### Monitoring
@@ -109,7 +108,7 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 - Prompt to deploy to production
 
 ## Project Plan
-Below is a crude project plan outlining the tasks that will be performed, in order of execution. The plan is based on my limited knowledge of scaling using AWS and Chef. Future tasks might change as compoments are built and better approaches are discovered.
+Below is a crude project plan outlining the tasks that will be performed, in order of execution. The plan is based on my limited knowledge of scaling using AWS and Chef. Future tasks might change as components are built and better approaches are discovered.
 
 - [ ] Build Django + Celery working skeleton
 - [ ] Setup CI to create EC2 instances and deploy app
@@ -117,7 +116,7 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 - [ ] Using Django as front-end to add/modify/remove checks
 - [ ] Sync function for updating of last ping time
 - [ ] Move updating of last ping time into Celery tasks
-- [ ] Isolate Celery workers into it's own EC2, probably start involving Chef here
+- [ ] Isolate Celery workers into its own EC2, probably start involving Chef here
 - [ ] Add more Celery tasks
   - [ ] Monitoring lapse ping 
   - [ ] Notification
@@ -129,7 +128,7 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 - [ ] Tweak Chef recipe to allow complete setup from scratch
 - [ ] Create SPA pages (if time permits)
   - [ ] User Dashboard
-  - [ ] Admin Dashbord
+  - [ ] Admin Dashboard
 
 ## Install
 
