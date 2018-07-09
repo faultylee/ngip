@@ -42,12 +42,14 @@ Upon completion, this application will be hosted on AWS and free for anyone to u
 
 AWS, this is part of the requirement. It does fit my design of doing a SPA hosting it on S3 as static page.
 
-- AWS EC2 to host background worker and service end point. Will be orchestrated using Chef Automate and Jenkins.
+- AWS EC2 to host background worker and service endpoint. Will be orchestrated using Chef Automate and Jenkins.
+- AWS Lambda as ping endpoint
 - AWS ELB to load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up.
 - AWS S3 to host SPA static website.
 - AWS SQS for Celery backend and to allow scaling of backend async tasks.
 - AWS SES for emailing of signin token and notification.
 - AWS RDS as persistant storage.
+- AWS Route53 as DNS
 - Debian due to my familiarity.
 - Docker to isolate Django and Celery Workers.
 - Jenkins for CI.
