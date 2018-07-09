@@ -26,6 +26,8 @@ Typical monitoring use cases are:
 
 I came about having this idea while developing an in-house application. It's a somewhat critical application which needs to run 24x7. There's internal monitoring tools from a different team which I could make use of, but going through the process and segregating the dashboard and notification prove too much hassle. Another common problem is power outages, which affect the internet connectivity resulting in missed alerts. 
 
+I went looking for an existing web application or services that does what I needed and couldn't find one. Other alternatives that I've explored either requires more effort than necessary to configure or it's not flexible when needing to change configuration. Hence there's a gap to be filled here. Which need me to explore developing this and hosting it as a service.
+
 This application will expect pings from the any application that can connect to `ngip.io`, and after the ping lapse for a predefined duration, a notification is sent. The pings can also include primitive data such as temperature, status code ...etc which will be included in the simple validation logic which send notification when the value is outside the configured range.
 
 As for the name, initially it was *Reverse Ping* which was long and rather lame. My friend suggested *ngip* which he said sounded like the reverse of ping. The name clicked and I went with it. He did give his blessing on using the name for this project :)
