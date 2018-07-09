@@ -115,7 +115,9 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 
 
 ## Usage
-*NOTE: This project is still in design stage*
+*NO
+TE: This project is still in design stage*
+
 Basic:
 ```
 $ curl ngip.io/<your unique check token>
