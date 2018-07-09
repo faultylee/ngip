@@ -44,6 +44,8 @@ Upon completion, this application will be hosted on AWS and free for anyone to u
 
 AWS, this is part of the requirement. It does fit my design of doing a SPA hosting it on S3 as static page. Most of the components will be orchestrated using Chef and Jenkins.
 
+![Infra](docs/images/ngip%20-%20solution%20architecture-Infra.png)
+
 | Technology             | Purpose                                                                                                 | Reason                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | AWS EC2                | Running Django REST and Celery workers                                                                  | As per requirement                                                                 |
@@ -61,6 +63,8 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 | Jenkins                | CI/CD                                                                                                      | As per requirement, similar to Gitlab CI which I have experience with              |
 
 ### Application
+
+![Application](docs/images/ngip%20-%20solution%20architecture-Application.png)
 
 | Technology             | Purpose                                                                                                 | Reason                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
