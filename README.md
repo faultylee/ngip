@@ -24,7 +24,7 @@ Typical monitoring use cases are:
 
 ## Background
 
-I came about having this idea while developing an in-house application. It's a somewhat critical application which needs to run 24x7. There's internal monitoring tools from a different team which I could make use of, but going through the process and segregating the dashboard and notification proof too much hassle. Another common problem is power outages, which affect the internet connectivity resulting in missed alerts. 
+I came about having this idea while developing an in-house application. It's a somewhat critical application which needs to run 24x7. There's internal monitoring tools from a different team which I could make use of, but going through the process and segregating the dashboard and notification prove too much hassle. Another common problem is power outages, which affect the internet connectivity resulting in missed alerts. 
 
 This application will expect pings from the any application that can connect to `ngip.io`, and after the ping lapse for a pre-defined duration, a notification is sent. The pings can also include primitive data such as temperature, status code ...etc which will be included in the simple validation logic which send notification when the value is outside the configured range.
 
