@@ -115,7 +115,30 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 
 
 ## Usage
+*NOTE: This project is still in design stage*
+Basic:
+```
+$ curl ngip.io/<your unique check token>
+OK
+```
 
+With Validation Logic:
+```
+$ curl ngip.io/<your unique check token>/key/value
+OK
+
+$ curl -d "param1=value1&param2=value2" -H "Content-Type: application/x-www-form-urlencoded" -X POST  ngip.io/<your unique check token>
+OK
+
+$ curl -d '{"key1":"value1", "key2":"value2"}' -H "Content-Type: application/json" -X POST ngip.io/<your unique check token>
+OK
+
+```
+
+## Credit
+
+- Chandana N. Athauda - [@inzeek](https://twitter.com/inzeek) for his guidance on my personal career and review on this project.
+- Yazid Azahari - [@yazidazahari](http://www.yazidazahari.com/), [@yazid](https://github.com/yazid) for his mentorship throughout my career and using `ngip` for this project.
 
 ## Maintainers
 
