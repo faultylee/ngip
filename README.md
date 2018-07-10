@@ -113,6 +113,9 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 - Load test
 - Prompt to deploy to production
 
+#### Load Testing
+I plan to have a separate setup for load testing, which provision a handful of EC2 instances to generate ping traffics and API call, then monitor the key metrics on the application and gauge how well the auto scaling is performing. 
+
 ## Project Plan
 Below is a crude project plan outlining the tasks that will be performed, in order of execution. The plan is based on my limited knowledge of scaling using AWS and Chef. Future tasks might change as components are built and better approaches are discovered.
 
