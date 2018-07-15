@@ -13,6 +13,7 @@ Typical monitoring use cases are:
 
 ## Table of Contents
 
+- [Changelog](#changelog)
 - [Background](#background)
 - [Proposed Setup](#proposed-setup)
 - [Project Plan](#project-plan)
@@ -21,6 +22,12 @@ Typical monitoring use cases are:
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
 - [License](#license)
+
+## Changelog
+#### 2018-07-15
+- Updated
+  - Added private subnet in infra diagram
+    
 
 ## Background
 
