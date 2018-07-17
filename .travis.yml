@@ -10,12 +10,12 @@ install:
 script:
   # Build your site (e.g., HTML, CSS, JS) here.
   #- make build
-  - aws s3 ls
 deploy:
   # Control deployment by setting a value for `on`. Setting the `branch`
   # option to `master` means Travis will only attempt a deployment on
   # builds of your repo's master branch (e.g., after you merge a PR).
-  #on:
+  on:
+    all_branches: true
   #  branch: master
   provider: s3
   # You can refer to environment variables from Travis repo settings!
@@ -34,3 +34,5 @@ after_deploy:
   #- aws configure set preview.cloudfront true
   # Invalidate every object in the targeted distribution.
   #- aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+  - aws s3 ls
+
