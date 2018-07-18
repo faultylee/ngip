@@ -10,3 +10,17 @@ pipeline {
         }
     }
 }
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh '''
+                    docker -v
+                    env
+                    ls -lah
+                '''
+            }
+        }
+    }
+}

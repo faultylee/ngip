@@ -41,7 +41,7 @@ if [ -n $IP ]; then
 
   docker_run_aws_cli ec2 update-security-group-rule-descriptions-ingress \
       --group-id $JENKINS_SECURITY_GROUP_ID \
-      --ip-permissions "[{\"IpProtocol\": \"tcp\", \"FromPort\": 80, \"ToPort\": 80, \"IpRanges\": [{\"CidrIp\": \"$IP/32\", \"Description\": \"Travis-CI\"}]}]"
+      --ip-permissions "[{\"IpProtocol\":\"tcp\",\"FromPort\":80,\"ToPort\":80,\"IpRanges\":[{\"CidrIp\":\"$IP/32\",\"Description\":\"Travis-CI\"}]}]"
 
 else
   echo "Cannot get IP for this server"
