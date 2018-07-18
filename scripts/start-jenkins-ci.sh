@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 
 if [ -e ../.env ]; then
   source ../.env
