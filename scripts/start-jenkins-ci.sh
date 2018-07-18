@@ -21,7 +21,7 @@ function docker_run_aws_cli(){
 }
 
 # Get the previous Travis-CI IP and remove from Security Group
-IP=$(aws ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" --output text)
+IP=$(docker_run_aws_cli ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" --output text)
 
 if [ -n $IP ]; then
     docker_run_aws_cli ec2 revoke-security-group-ingress \
