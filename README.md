@@ -1,6 +1,6 @@
 # ngip
 
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![Build Status](https://s3-ap-southeast-1.amazonaws.com/ngip-build-output/build-badge.svg)](http://build.ngip.io/jenkins/job/ngip)
 
 This will be a hosted application which works like other uptime monitoring tools, but the ping direction is in reverse. The main purpose is to detect uptime of intranet application which doesn't expose any endpoint to the internet, but are able to access `ngip.io`. 
 
