@@ -2,17 +2,9 @@
 
 sudo: required
 
-language: python
-python:
-  - "3.6"
-cache: pip
-
 services:
   - docker
 
-install:
-  # Install dependencies required
-  - pip install awscli
 script:
   - ./scripts/start-jenkins-ci.sh
 
