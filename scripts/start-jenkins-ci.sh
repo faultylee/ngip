@@ -5,7 +5,7 @@ if [ -e ../.env ]; then
 fi
 
 function check_and_trigger_build(){
-  if [[ "$(curl --connect-timeout 5 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
+  if [[ "$(curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
     curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
     exit 0
   fi
@@ -59,7 +59,7 @@ counter=0
 result=0
 until [ $counter -ge 24 ]
 do
-  [[ "$(curl --connect-timeout 5 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]] && result=1 && break
+  [[ "$(curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]] && result=1 && break
   counter=$[$counter+1]
   printf '.'
   sleep 5
