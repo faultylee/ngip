@@ -47,6 +47,9 @@ else
   exit 1
 fi
 
+# if Jenkins CI Server already running, trigger tge build straight away
+check_and_trigger_build
+
 docker run --rm \
   --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
   --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
@@ -54,12 +57,13 @@ docker run --rm \
   garland/aws-cli-docker \
   aws ec2 start-instances --instance-ids $JENKINS_INSTANCE_ID
 
+
 # Wait for Jenkins CI Server to start, should be less than 2~4 mins
 counter=0
 result=0
 until [ $counter -ge 24 ]
 do
-  [[ "$(curl --connect-timeout 5 -s -o /dev/null -w ''%{http_code}'' http://build.ngip.io/jenkins)" == "403" ]] && result=1 && break
+  [[ "$(curl --connect-timeout 5 -s -o /dev/null -w ''%{http_code}'' http://build.ngip.io/jenkins) --user $NGIP_BUILD_USER" == "302" ]] && result=1 && break
   counter=$[$counter+1]
   printf '.'
   sleep 5
@@ -69,3 +73,11 @@ if [ $result -eq 0 ]; then
   exit 1
 fi
 
+check_and_trigger_build
+
+function check_and_trigger_build(){
+  if [[ "$(curl --connect-timeout 5 -s -o /dev/null -w ''%{http_code}'' http://build.ngip.io/jenkins) --user $NGIP_BUILD_USER" == "302" ]]; then
+    curl -s http://build.ngip.io/jenkins/job/ngip/build?token=hfw8yF34JWsWAPnBZDzItipoio1z1OgI --user $NGIP_BUILD_USER
+    exit 0
+  fi
+}
