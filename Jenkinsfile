@@ -23,7 +23,7 @@ pipeline {
     post {
         always {
             node('master') {
-                step {
+                steps {
                     sh '''
                         curl $BUILD_URL/consoleText > build.log
                         scripts/update-build-badge.sh
