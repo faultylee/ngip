@@ -22,10 +22,14 @@ pipeline {
     }
     post {
         always {
-            sh '''
-                curl $BUILD_URL/consoleText > build.log
-                scripts/update-build-badge.sh
-            '''
+            node('master') {
+                step {
+                    sh '''
+                        curl $BUILD_URL/consoleText > build.log
+                        scripts/update-build-badge.sh
+                    '''
+                }
+            }
         }
     }
 }
