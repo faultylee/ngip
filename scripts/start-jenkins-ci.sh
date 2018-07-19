@@ -42,16 +42,16 @@ function authorize_ip(){
 
 # Get the previous Travis-CI IP and remove from Security Group
 # TODO: jq .[] | .[] | .[] is hacky, need to find out why aws cli is returning empty arrays
-docker_run aws ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID \
-  --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" \
-  | jq -r ".[] | .[] | .[]" \
-  | while read IP; do revoke_ip $IP; done
+#docker_run aws ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID \
+#  --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" \
+#  | jq -r ".[] | .[] | .[]" \
+#  | while read IP; do revoke_ip $IP; done
 
 
 # Add the current list of Travis-CI IP into the Security Group
-docker_run curl -s https://dnsjson.com/nat.travisci.net/A.json \
-  | jq -r '.results.records|sort | .[]' \
-  | while read IP; do authorize_ip $IP; done
+#docker_run curl -s https://dnsjson.com/nat.travisci.net/A.json \
+#  | jq -r '.results.records|sort | .[]' \
+#  | while read IP; do authorize_ip $IP; done
 
 # if Jenkins CI Server already running, trigger tge build straight away
 check_and_trigger_build
