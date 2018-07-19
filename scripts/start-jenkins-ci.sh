@@ -11,13 +11,17 @@ function check_and_trigger_build(){
   fi
 }
 
-function docker_run_aws_cli(){
+function docker_run(){
   docker run --rm \
     --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
     --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
     --env AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \
-    garland/aws-cli-docker \
-    aws $@
+    faulty/aws-cli-docker \
+    $@
+}
+
+function docker_run_aws_cli(){
+    docker_run aws $@
 }
 
 # Get the previous Travis-CI IP and remove from Security Group
@@ -59,7 +63,7 @@ counter=0
 result=0
 until [ $counter -ge 24 ]
 do
-  [[ "$(curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]] && result=1 && break
+  [[ "$(docker_run curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]] && result=1 && break
   counter=$[$counter+1]
   printf '.'
   sleep 5
