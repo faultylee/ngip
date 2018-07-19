@@ -6,7 +6,8 @@ fi
 
 function check_and_trigger_build(){
   if [[ "$(docker_run curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
-    curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
+    #docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
+    docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/build?delay=0sec
     exit 0
   fi
 }
@@ -40,16 +41,16 @@ function authorize_ip(){
 }
 
 # Get the previous Travis-CI IP and remove from Security Group
+# TODO: jq .[] | .[] | .[] is hacky, need to find out why aws cli is returning empty arrays
 docker_run aws ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID \
   --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" \
-  | jq -c ".[] | .[] | .[]" \
+  | jq -r ".[] | .[] | .[]" \
   | while read IP; do revoke_ip $IP; done
 
 
 # Add the current list of Travis-CI IP into the Security Group
-
 docker_run curl -s https://dnsjson.com/nat.travisci.net/A.json \
-  | jq '.results.records|sort | .[]' \
+  | jq -r '.results.records|sort | .[]' \
   | while read IP; do authorize_ip $IP; done
 
 # if Jenkins CI Server already running, trigger tge build straight away
