@@ -5,7 +5,7 @@ if [ -e ../.env ]; then
 fi
 
 function check_and_trigger_build(){
-  if [[ "$(curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
+  if [[ "$(docker_run curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
     curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
     exit 0
   fi
@@ -20,43 +20,42 @@ function docker_run(){
     $@
 }
 
-function docker_run_aws_cli(){
-    docker_run aws $@
-}
-
-# Get the previous Travis-CI IP and remove from Security Group
-IP=$(docker_run_aws_cli ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" --output text)
-
-if [ -n $IP ]; then
-    docker_run_aws_cli ec2 revoke-security-group-ingress \
+function revoke_ip(){
+    docker_run aws ec2 revoke-security-group-ingress \
       --group-id $JENKINS_SECURITY_GROUP_ID \
       --port 80 \
-      --protocol tcp --cidr $IP;
-fi
+      --protocol tcp --cidr $1;
+}
 
-# Add the current Travis-CI IP into the Security Group
-IP=$(docker_run curl -s ifconfig.co)
-if [ -n $IP ]; then
-  docker_run_aws_cli ec2 authorize-security-group-ingress \
+function authorize_ip(){
+  docker_run aws ec2 authorize-security-group-ingress \
       --group-id $JENKINS_SECURITY_GROUP_ID \
       --protocol tcp \
       --port 80 \
       --cidr $IP/32
 
-  docker_run_aws_cli ec2 update-security-group-rule-descriptions-ingress \
+  docker_run aws ec2 update-security-group-rule-descriptions-ingress \
       --group-id $JENKINS_SECURITY_GROUP_ID \
       --ip-permissions "[{\"IpProtocol\":\"tcp\",\"FromPort\":80,\"ToPort\":80,\"IpRanges\":[{\"CidrIp\":\"$IP/32\",\"Description\":\"Travis-CI\"}]}]"
+}
 
-else
-  echo "Cannot get IP for this server"
-  exit 1
-fi
+# Get the previous Travis-CI IP and remove from Security Group
+docker_run aws ec2 describe-security-groups --group-ids $JENKINS_SECURITY_GROUP_ID \
+  --query "SecurityGroups[*].IpPermissions[*].IpRanges[?Description=='Travis-CI'].CidrIp" \
+  | jq -c ".[] | .[] | .[]" \
+  | while read IP; do revoke_ip $IP; done
+
+
+# Add the current list of Travis-CI IP into the Security Group
+
+docker_run curl -s https://dnsjson.com/nat.travisci.net/A.json \
+  | jq '.results.records|sort | .[]' \
+  | while read IP; do authorize_ip $IP; done
 
 # if Jenkins CI Server already running, trigger tge build straight away
 check_and_trigger_build
 
-docker_run_aws_cli ec2 start-instances --instance-ids $JENKINS_INSTANCE_ID
-
+docker_run aws ec2 start-instances --instance-ids $JENKINS_INSTANCE_ID
 
 # Wait for Jenkins CI Server to start, should be less than 2~4 mins
 counter=0
