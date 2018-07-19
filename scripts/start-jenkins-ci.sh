@@ -35,7 +35,7 @@ if [ -n $IP ]; then
 fi
 
 # Add the current Travis-CI IP into the Security Group
-IP=$(curl -s ifconfig.co)
+IP=$(docker_run curl -s ifconfig.co)
 if [ -n $IP ]; then
   docker_run_aws_cli ec2 authorize-security-group-ingress \
       --group-id $JENKINS_SECURITY_GROUP_ID \
