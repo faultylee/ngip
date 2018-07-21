@@ -5,21 +5,31 @@ if [ -e ../.env ]; then
   source ../.env
 fi
 
+source ./docker_helper.sh
+
+TRAVIS_COMMIT=35749aeadbea6cb601f5b06bb45f7760cb11c93
+
 function check_and_trigger_build(){
   if [[ "$(docker_run curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
+
+    triggered=false
+    for job_url in $(docker_run curl -s http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/api/json | docker_run_i jq -r '.jobs[]? | .url'); do
+      echo ${job_url}
+      last_build_url=$(docker_run curl -s ${job_url/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io}api/json | docker_run_i jq -r '.lastBuild? | .url')
+      if [ -n "$last_build_url" ]; then
+        commit_sha=$(curl -s "${last_build_url/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io}api/json" | docker_run_i jq -r '.actions[]? | .lastBuiltRevision | .SHA1 | select(. != null)')
+        if [ "$commit_sha" = "$TRAVIS_COMMIT" ]; then
+          triggered=true
+        fi
+      fi
+    done
+
     #docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
-    docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/build?delay=0sec
+    if [ "$triggered" = false ]; then
+      docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/build?delay=0sec
+    fi
     exit 0
   fi
-}
-
-function docker_run(){
-  docker run --rm \
-    --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-    --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-    --env AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \
-    faulty/aws-cli-docker \
-    $@
 }
 
 function revoke_ip(){
