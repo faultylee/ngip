@@ -8,5 +8,6 @@ services:
   - docker
 
 script:
-  - ./scripts/start-jenkins-ci.sh
+  - cd scripts
+  - ./start-jenkins-ci.sh
 

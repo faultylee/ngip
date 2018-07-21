@@ -7,8 +7,6 @@ fi
 
 source ./docker_helper.sh
 
-TRAVIS_COMMIT=35749aeadbea6cb601f5b06bb45f7760cb11c93
-
 function check_and_trigger_build(){
   if [[ "$(docker_run curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
 
