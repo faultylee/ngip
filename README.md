@@ -11,6 +11,8 @@ Typical monitoring use cases are:
 - IoT sensors
 - Presence of certain Wifi devices
 
+*Side note:* This is also a learning project for me to solidify my knowledge in DevOps around Jenkins, Chef and various AWS services.
+
 ## Table of Contents
 
 - [Changelog](#changelog)
@@ -126,6 +128,8 @@ I plan to have a separate setup for load testing, which provision a handful of E
 ## Project Plan
 Below is a crude project plan outlining the tasks that will be performed, in order of execution. The plan is based on my limited knowledge of scaling using AWS and Chef. Future tasks might change as components are built and better approaches are discovered.
 
+- [x] Setup basic working CI using Jenkins CI
+- [x] Setup CloudFront for S3
 - [ ] Build Django + Celery working skeleton
 - [ ] Setup CI to create EC2 instances and deploy app
 - [ ] Email based signin token
