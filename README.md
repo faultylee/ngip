@@ -1,6 +1,6 @@
 # ngip
 
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![Build Status](https://s3-ap-southeast-1.amazonaws.com/ngip-build-output/build-badge.svg)](http://build.ngip.io/jenkins/job/ngip)
 
 This will be a hosted application which works like other uptime monitoring tools, but the ping direction is in reverse. The main purpose is to detect uptime of intranet application which doesn't expose any endpoint to the internet, but are able to access `ngip.io`. 
 
@@ -10,6 +10,8 @@ Typical monitoring use cases are:
 - IoT hub
 - IoT sensors
 - Presence of certain Wifi devices
+
+*Side note:* This is also a learning project for me to solidify my knowledge in DevOps around Jenkins, Chef and various AWS services.
 
 ## Table of Contents
 
@@ -126,6 +128,8 @@ I plan to have a separate setup for load testing, which provision a handful of E
 ## Project Plan
 Below is a crude project plan outlining the tasks that will be performed, in order of execution. The plan is based on my limited knowledge of scaling using AWS and Chef. Future tasks might change as components are built and better approaches are discovered.
 
+- [x] Setup basic working CI using Jenkins CI
+- [x] Setup CloudFront for S3
 - [ ] Build Django + Celery working skeleton
 - [ ] Setup CI to create EC2 instances and deploy app
 - [ ] Email based signin token

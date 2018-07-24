@@ -1,0 +1,13 @@
+# The main purpose for this build script is to start Jenkins CI server
+
+sudo: required
+
+language: generic
+
+services:
+  - docker
+
+script:
+  - cd scripts
+  - ./start-jenkins-ci.sh
+
