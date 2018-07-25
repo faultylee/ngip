@@ -1,0 +1,9 @@
+[
+  {
+    "model": "ngip.account",
+    "pk": 1,
+    "fields": {
+      "name": "Internal"
+    }
+  }
+]
