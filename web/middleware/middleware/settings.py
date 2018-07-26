@@ -118,4 +118,4 @@ STATIC_URL = "/static/"
 
 
 # ngip customization
-#AUTH_USER_MODEL = "ngip.User"
+AUTH_USER_MODEL = "ngip.User"

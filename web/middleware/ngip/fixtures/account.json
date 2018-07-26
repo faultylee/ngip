@@ -1,9 +1,104 @@
 [
   {
+    "model": "sessions.session",
+    "pk": "tfh4rdtdy8jugzkkudxs5nsrys4qivp9",
+    "fields": {
+      "session_data": "ZTgyMzlhNDkwMjRkMGFmYTAwYjRjZTJlMDYxYjJjNTNiMzRhMTYzNTp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiJmYTNiMjY2MjM1NTFiN2JmNmUwOWNhOTk5MzJmYTY3MTc0ZWYxNjlkIn0=",
+      "expire_date": "2018-08-09T13:21:44.058Z"
+    }
+  },
+  {
+    "model": "ngip.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$36000$4MbqD9sukBIs$7HvdY6b4AB/9zeCMGrGyhJwSyz5ujwiL7Hkay6ePaVw=",
+      "last_login": "2018-07-26T13:21:44.032Z",
+      "is_superuser": true,
+      "username": "faulty",
+      "first_name": "",
+      "last_name": "",
+      "email": "faulty.lee+ngip@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2018-07-26T12:50:57.912Z",
+      "account": null,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "ngip.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$36000$ujBCy3psBZao$kMD438WuTyMgXWYMHf1aK7uf2JlruL9JBU5u4kbcJA8=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "tester",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2018-07-26T13:17:44Z",
+      "account": 1,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "ngip.ping",
+    "pk": 1,
+    "fields": {
+      "account": 1,
+      "name": "home",
+      "date_received": null,
+      "status": "a",
+      "notified": false
+    }
+  },
+  {
+    "model": "ngip.pingtoken",
+    "pk": 1,
+    "fields": {
+      "created_by": null,
+      "date_created": "2018-07-26T13:22:19.888Z",
+      "modified_by": null,
+      "date_modified": "2018-07-26T13:22:19.888Z",
+      "ping": 1,
+      "token": "1234567890",
+      "date_last_used": null
+    }
+  },
+  {
+    "model": "ngip.pingintvalue",
+    "pk": 1,
+    "fields": {
+      "ping": 1,
+      "key": "a",
+      "value": 2,
+      "compare": "ge"
+    }
+  },
+  {
+    "model": "ngip.pingstringvalue",
+    "pk": 1,
+    "fields": {
+      "ping": 1,
+      "key": "b",
+      "value": "test",
+      "compare": "eq"
+    }
+  },
+  {
     "model": "ngip.account",
     "pk": 1,
     "fields": {
-      "name": "Internal"
+      "created_by": 1,
+      "date_created": "2018-07-26T12:51:20.608Z",
+      "modified_by": null,
+      "date_modified": "2018-07-26T12:51:20.608Z",
+      "name": "test",
+      "status": "a"
     }
   }
 ]
