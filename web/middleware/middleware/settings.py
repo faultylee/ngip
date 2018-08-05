@@ -140,35 +140,26 @@ ENVIRONMENT = 'local'
 if 'ENVIRONMENT' in os.environ:
     ENVIRONMENT = os.environ['ENVIRONMENT']
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.environ['POSTGRES_HOST'],
+        'PORT': os.environ['POSTGRES_PORT'],
+        'NAME': os.environ['POSTGRES_DB'],
+        'USER': os.environ['POSTGRES_USER'],
+        'PASSWORD': os.environ['POSTGRES_PASSWORD']
+    }
+}
+
 RUNNING_IN_DOCKER = False
 if 'RUNNING_IN_DOCKER' in os.environ:
     RUNNING_IN_DOCKER = os.environ['RUNNING_IN_DOCKER'] == 'TRUE'
+#TODO: should check if local, let static root be from env
 if RUNNING_IN_DOCKER:
     # Running the Docker image
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ['POSTGRES_DB'],
-            'USER': os.environ['POSTGRES_USER'],
-            'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-            'HOST': os.environ['POSTGRES_HOST'],
-            'PORT': 5432
-        }
-    }
     STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
     STATIC_ROOT = '/code/data/static'
 else:
-    # Building the Docker image
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'tp_middleware_db',
-            'USER': 'tp_middleware',
-            'PASSWORD': 'Password1',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
     # SECURITY WARNING: don't run with debug turned on in production!
     DEBUG = True
     STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
@@ -181,10 +172,7 @@ else:
     #     }
     # }
 
-if RUNNING_IN_DOCKER:
-    CELERY_BROKER_URL = f'redis://:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:6379'
-else:
-    CELERY_BROKER_URL = 'redis://:Password1@localhost:6379'
+CELERY_BROKER_URL = f'redis://:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['application/json']
@@ -198,13 +186,8 @@ CELERY_MONITOR_TASK_PENDING_EXPIRES = timedelta(days=14)
 
 # TODO: CELERY_ALWAYS_EAGER - set during unittest
 
-if RUNNING_IN_DOCKER:
-    MQTT_HOST = os.environ["MQTT_HOST"]
-    MQTT_PORT = int(os.environ["MQTT_PORT"])
-else:
-    # MQTT_HOST = '127.0.0.1'
-    MQTT_HOST = '10.1.20.52'
-    MQTT_PORT = int('1883')
+MQTT_HOST = os.environ["MQTT_HOST"]
+MQTT_PORT = int(os.environ["MQTT_PORT"])
 
 # LOGGING = {
 #     'version': 1,
