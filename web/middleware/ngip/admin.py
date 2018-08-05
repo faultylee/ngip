@@ -7,27 +7,25 @@ from ngip import models
 # class AccountPublicUserInline(admin.TabularInline):
 #     model = models.User
 
+
 @admin.register(models.User)
 class PublicUser(UserAdmin):
     pass
 
-PublicUser.list_display = ('username', 'email', 'account', 'is_staff')
-PublicUser.fieldsets += (
-    (None, {
-        'fields': ('account',)
-    }),
-)
+
+PublicUser.list_display = ("username", "email", "account", "is_staff")
+PublicUser.fieldsets += ((None, {"fields": ("account",)}),)
 
 
 @admin.register(models.Account)
 class Account(ModelAdmin):
 
-    list_display = ('name', 'get_user_count', 'get_ping_count')
+    list_display = ("name", "get_user_count", "get_ping_count")
 
-    readonly_fields = ['created_by', 'date_created', 'modified_by', 'date_modified']
+    readonly_fields = ["created_by", "date_created", "modified_by", "date_modified"]
 
     inlines = [
-        #AccountPublicUserInline
+        # AccountPublicUserInline
     ]
 
     def get_user_count(self, obj):
@@ -38,7 +36,7 @@ class Account(ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
-            #first save
+            # first save
             obj.created_by = request.user
         else:
             obj.modified_by = request.user
@@ -47,14 +45,16 @@ class Account(ModelAdmin):
 
 class PingTokenInline(admin.TabularInline):
     model = models.PingToken
-    fields = ['token', 'date_last_used']
-    readonly_fields = ['date_last_used']
+    fields = ["token", "date_last_used"]
+    readonly_fields = ["date_last_used"]
+
     def save_model(self, request, obj, form, change):
         if not obj.pk:
-            #first save
+            # first save
             obj.created_by = request.user
         else:
             obj.modified_by = request.user
+
 
 class PingIntValueInline(admin.TabularInline):
     model = models.PingIntValue
@@ -67,13 +67,9 @@ class PingStringValueInline(admin.TabularInline):
 @admin.register(models.Ping)
 class Ping(ModelAdmin):
 
-    list_display = ['account', 'name', 'date_received', 'status', 'notified']
+    list_display = ["account", "name", "date_received", "status", "notified"]
 
-    fields = ['account', 'name', 'status']
+    fields = ["account", "name", "status"]
 
-    inlines = [
-        PingTokenInline,
-        PingIntValueInline,
-        PingStringValueInline
-    ]
+    inlines = [PingTokenInline, PingIntValueInline, PingStringValueInline]
     pass

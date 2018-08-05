@@ -10,11 +10,7 @@ class STATUS:
     ACTIVE = "a"
     INACTIVE = "i"
     PAUSED = "p"
-    FLAGS = (
-        (ACTIVE, "Active"),
-        (INACTIVE, "Inactive"),
-        (PAUSED, "Paused"),
-    )
+    FLAGS = ((ACTIVE, "Active"), (INACTIVE, "Inactive"), (PAUSED, "Paused"))
 
 
 class PING_STRING_VALUE_COMPARE:
@@ -57,13 +53,23 @@ class AuditModel(models.Model):
     fields.
     """
 
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='+',
-                                   # GDPR compliance
-                                   on_delete=models.SET_NULL)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        # GDPR compliance
+        on_delete=models.SET_NULL,
+    )
     date_created = django_extensions.db.models.CreationDateTimeField("Created On")
-    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='+',
-                                   # GDPR compliance
-                                   on_delete=models.SET_NULL)
+    modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        # GDPR compliance
+        on_delete=models.SET_NULL,
+    )
     date_modified = django_extensions.db.models.ModificationDateTimeField("Modified On")
 
     def save(self, **kwargs):
@@ -97,7 +103,9 @@ class UserLoginToken(models.Model):
     date_login = models.DateTimeField("Login On")
 
     def __str__(self):
-        return f"{self.user}, Created On: {self.date_create}, Login On: {self.date_login}"
+        return (
+            f"{self.user}, Created On: {self.date_create}, Login On: {self.date_login}"
+        )
 
 
 class Ping(models.Model):

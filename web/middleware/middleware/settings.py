@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,18 +26,22 @@ SECRET_KEY = "^wj%(pbdo(0v#5mdo13h)j5(z9y*rev6ae-@9q%4iz9mrnq5$@"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "rest_framework",
+    "rest_framework_swagger",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_celery_beat",
+    "django_celery_monitor",
     "ngip",
     "django_extensions",
     "bootstrap",
@@ -76,13 +81,13 @@ WSGI_APPLICATION = "middleware.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
-}
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -100,9 +105,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'Asia/Singapore'
 
 USE_I18N = True
 
@@ -119,3 +124,138 @@ STATIC_URL = "/static/"
 
 # ngip customization
 AUTH_USER_MODEL = "ngip.User"
+
+# https://www.capside.com/labs/deploying-full-django-stack-with-docker-compose/
+# using environment variable to pass in DB detail, making it easier to manage dev and prod
+if 'DJANGO_DEBUG' in os.environ:
+    # SECURITY WARNING: don't run with debug turned on in production!
+    DEBUG = os.environ['DJANGO_DEBUG'] == 'TRUE'
+
+PRODUCTION = False
+if 'PRODUCTION' in os.environ:
+    PRODUCTION = os.environ['PRODUCTION'] == 'TRUE'
+
+ENVIRONMENT = 'local'
+# local = local debug
+if 'ENVIRONMENT' in os.environ:
+    ENVIRONMENT = os.environ['ENVIRONMENT']
+
+RUNNING_IN_DOCKER = False
+if 'RUNNING_IN_DOCKER' in os.environ:
+    RUNNING_IN_DOCKER = os.environ['RUNNING_IN_DOCKER'] == 'TRUE'
+if RUNNING_IN_DOCKER:
+    # Running the Docker image
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ['POSTGRES_DB'],
+            'USER': os.environ['POSTGRES_USER'],
+            'PASSWORD': os.environ['POSTGRES_PASSWORD'],
+            'HOST': os.environ['POSTGRES_HOST'],
+            'PORT': 5432
+        }
+    }
+    STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
+    STATIC_ROOT = '/code/data/static'
+else:
+    # Building the Docker image
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'tp_middleware_db',
+            'USER': 'tp_middleware',
+            'PASSWORD': 'Password1',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+    # SECURITY WARNING: don't run with debug turned on in production!
+    DEBUG = True
+    STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static_test')
+    # STATIC_ROOT = '/static'
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.sqlite3',
+    #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    #     }
+    # }
+
+if RUNNING_IN_DOCKER:
+    CELERY_BROKER_URL = f'redis://:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:6379'
+else:
+    CELERY_BROKER_URL = 'redis://:Password1@localhost:6379'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_RESULT_EXPIRES = timedelta(days=14)
+CELERY_MONITOR_TASK_SUCCESS_EXPIRES = timedelta(days=14)
+CELERY_MONITOR_TASK_ERROR_EXPIRES = timedelta(days=14)
+CELERY_MONITOR_TASK_PENDING_EXPIRES = timedelta(days=14)
+
+# TODO: CELERY_ALWAYS_EAGER - set during unittest
+
+if RUNNING_IN_DOCKER:
+    MQTT_HOST = os.environ["MQTT_HOST"]
+    MQTT_PORT = int(os.environ["MQTT_PORT"])
+else:
+    # MQTT_HOST = '127.0.0.1'
+    MQTT_HOST = '10.1.20.52'
+    MQTT_PORT = int('1883')
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#         'mqtt_file': {
+#             'level': 'INFO',
+#             'class': 'touchpoint.log.ParallelTimedRotatingFileHandler',
+#             'filename': os.path.join(BASE_DIR, '../data/logs/touchpoint-mqtt-'),
+#             'postfix': '.txt',
+#             'when': 'midnight',
+#             'interval': 1,
+#             'backupCount': 0,
+#             # 'formatter': 'standard',
+#         },
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'class': 'django.utils.log.AdminEmailHandler',
+#             'include_html': True,
+#         }
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'propagate': True,
+#             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+#         },
+#         'touchpoint.mqtt_log': {
+#             'handlers': ['mqtt_file'],
+#             'propagate': True,
+#             'level': 'INFO',
+#         },
+#         'touchpoint.email_log': {
+#             'handlers': ['mail_admins'],
+#             'propagate': True,
+#             'level': 'INFO',
+#         },
+#     },
+# }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CELERY_BROKER_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+ADMINS = [('faulty', 'faulty.lee+ngip@gmail.com')]
