@@ -129,16 +129,14 @@ AUTH_USER_MODEL = "ngip.User"
 # using environment variable to pass in DB detail, making it easier to manage dev and prod
 if 'DJANGO_DEBUG' in os.environ:
     # SECURITY WARNING: don't run with debug turned on in production!
-    DEBUG = os.environ['DJANGO_DEBUG'] == 'TRUE'
+    DEBUG = os.environ['DJANGO_DEBUG'].upper() == 'TRUE'
 
 PRODUCTION = False
-if 'PRODUCTION' in os.environ:
-    PRODUCTION = os.environ['PRODUCTION'] == 'TRUE'
-
-ENVIRONMENT = 'local'
 # local = local debug
+ENVIRONMENT = 'local'
 if 'ENVIRONMENT' in os.environ:
-    ENVIRONMENT = os.environ['ENVIRONMENT']
+    PRODUCTION = os.environ['ENVIRONMENT'].upper() == 'PROD'
+
 
 DATABASES = {
     'default': {
@@ -152,14 +150,7 @@ DATABASES = {
 }
 
 RUNNING_IN_DOCKER = False
-if 'RUNNING_IN_DOCKER' in os.environ:
-    RUNNING_IN_DOCKER = os.environ['RUNNING_IN_DOCKER'] == 'TRUE'
-#TODO: should check if local, let static root be from env
-if RUNNING_IN_DOCKER:
-    # Running the Docker image
-    STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
-    STATIC_ROOT = '/code/data/static'
-else:
+if ENVIRONMENT == 'local':
     # SECURITY WARNING: don't run with debug turned on in production!
     DEBUG = True
     STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
@@ -171,6 +162,10 @@ else:
     #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     #     }
     # }
+else:
+    # Running the Docker image
+    STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
+    STATIC_ROOT = '/code/data/static'
 
 CELERY_BROKER_URL = f'redis://:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
@@ -241,4 +236,4 @@ CACHES = {
     }
 }
 
-ADMINS = [('faulty', 'faulty.lee+ngip@gmail.com')]
+ADMINS = [(os.environ["ADMIN_NAME"], os.environ["ADMIN_EMAIL"])]
