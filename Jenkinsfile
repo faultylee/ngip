@@ -2,6 +2,8 @@ node {
   stage ('Build') {
     sh '''
       cd web/middleware
+      ls -la
+      env
       compose build
     '''
   }
