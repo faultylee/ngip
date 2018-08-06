@@ -4,13 +4,13 @@ node {
       cd web/middleware
       ls -la
       env
-      compose build
+      docker-compose build
     '''
   }
   stage ('Test') {
     sh '''
       cd web/middleware
-      compose up -d
+      docker-compose up -d
     '''
   }
   stage ('Done') {
