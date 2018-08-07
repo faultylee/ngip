@@ -47,7 +47,7 @@ pipeline {
   post {
     always {
       node('master') {
-        build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_URL', value: '')], wait: false
+        build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: ${env.BUILD_ID}), string(name: 'NGIP_BRANCH_NAME', value: ${env.BRANCH_NAME})], wait: false
         sh '''
             cd web/middleware
             docker-compose stop
