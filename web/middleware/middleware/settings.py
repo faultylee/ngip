@@ -30,22 +30,31 @@ ALLOWED_HOSTS = ['*', ]
 
 
 # Application definition
-
-INSTALLED_APPS = [
-    "rest_framework",
-    "rest_framework_swagger",
+# APPS
+# ------------------------------------------------------------------------------
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # 'django.contrib.humanize', # Handy template tags
+]
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "rest_framework_swagger",
     "django_celery_beat",
     "django_celery_monitor",
-    "ngip",
     "django_extensions",
     "bootstrap",
 ]
+LOCAL_APPS = [
+    "ngip",
+]
+# https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
