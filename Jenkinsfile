@@ -5,13 +5,33 @@ pipeline {
       }
   }
   stages {
+    stage('Pre Web Build') {
+      agent any
+        steps {
+          sh '''
+            cd web/middleware
+            echo "DJANGO_DEBUG=$DJANGO_DEBUG" >> .env
+            echo "ENVIRONMENT=$ENVIRONMENT" >> .env
+            echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
+            echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
+            echo "POSTGRES_DB=$POSTGRES_DB" >> .env
+            echo "POSTGRES_USER=$POSTGRES_USER" >> .env
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+            echo "REDIS_HOST=$REDIS_HOST" >> .env
+            echo "REDIS_PORT=$REDIS_PORT" >> .env
+            echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
+            echo "MQTT_HOST=$MQTT_HOST" >> .env
+            echo "MQTT_PORT=$MQTT_PORT" >> .env
+            echo "ADMIN_NAME=$ADMIN_NAME" >> .env
+            echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
+          '''
+        }
+    }
     stage('Web Build') {
       agent any
         steps {
           sh '''
             cd web/middleware
-            ls -lah
-            env
             docker-compose build #tag with git hash
           '''
         }
