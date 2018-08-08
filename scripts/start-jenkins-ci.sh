@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 # This script will is to be triggered by a CI from code checkin, and check if Jenkins CI server is up, will bring it up if not, and also trigger the build on it.
 
 if [ -e ../.env ]; then
