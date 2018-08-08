@@ -55,10 +55,12 @@ pipeline {
     }
     stage('Test2') {
       agent {
-        docker { image 'python:3.7-alpine' }
+        docker { image 'faulty/aws-cli-docker:latest' }
       }
       steps {
-        sh 'python --version'
+        sh '''
+          curl -s -L  http://localhost:8000/ping | jq ".[] | .account" -r
+        '''
         script {
           timeout(time: 10, unit: 'MINUTES') {
             input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
