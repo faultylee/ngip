@@ -62,6 +62,7 @@ pipeline {
       }
       steps {
         sh '''
+          sleep 600
           test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
           if [ -z "$test" ]; then
             exit 127
