@@ -60,6 +60,9 @@ pipeline {
       steps {
         sh '''
           test=$(curl -s -L  http://localhost:8000/ping | jq ".[] | .account" -r)
+          if [ -z "$test" ]; then
+            exit 127
+          fi
           if [[ "$test" == "Account: test" ]]; then
             exit 127
           fi
@@ -79,8 +82,8 @@ pipeline {
         sh '''
             cd web/middleware
             docker-compose stop
-            #curl $BUILD_URL/consoleText > build.log
-            #scripts/update-build-badge.sh
+            docker-compose rm -fs
+            wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/$NGIP_BUILD_URL/consoleText
         '''
       }
     }
