@@ -55,12 +55,14 @@ pipeline {
     }
     stage('Web Test') {
       agent {
-        docker { image 'faulty/aws-cli-docker:latest' }
+        docker {
+          image 'faulty/aws-cli-docker:latest'
+          args '--net="host"'
+        }
       }
       steps {
         sh '''
-          source ./scripts/docker_helper.sh
-          test=$(docker_run curl -s -L  http://localhost:8000/ping/ | docker_run_i jq '.[] | .account' -r)
+          test=$(curl -s -L  http://localhost:8000/ping/ | docker_run_i jq '.[] | .account' -r)
           if [ -z "$test" ]; then
             exit 127
           fi
@@ -74,6 +76,10 @@ pipeline {
   post {
     always {
       node('master') {
+        docker {
+          image 'faulty/aws-cli-docker:latest'
+          args '--net="host"'
+        }
         script {
           timeout(time: 10, unit: 'MINUTES') {
             input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
@@ -86,9 +92,8 @@ pipeline {
         '''
         withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
-            source ./scripts/docker_helper.sh
-            docker_run wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
-            docker_run aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
+            wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
+            aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
           '''
         }
       }
