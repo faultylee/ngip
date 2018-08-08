@@ -62,7 +62,7 @@ pipeline {
       }
       steps {
         sh '''
-          test=$(curl -s -L  http://localhost:8000/ping/ | docker_run_i jq '.[] | .account' -r)
+          test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
           if [ -z "$test" ]; then
             exit 127
           fi
