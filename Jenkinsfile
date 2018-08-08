@@ -63,12 +63,12 @@ pipeline {
       steps {
         sh '''
           sleep 10
-          test=$(curl -s -L  http://localhost:8000/ping/) # | jq '.[] | .account' -r)
+          test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
           echo $test
           if [ -z "$test" ]; then
             exit 127
           fi
-          if [[ "$test" == "Account: test" ]]; then
+          if [[ "$test" != "Account: test" ]]; then
             exit 127
           fi
         '''
