@@ -10,18 +10,18 @@ pipeline {
         steps {
           sh '''
             cd web/middleware
-            echo "DJANGO_DEBUG=$DJANGO_DEBUG" >> .env
-            echo "ENVIRONMENT=$ENVIRONMENT" >> .env
-            echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
-            echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
-            echo "POSTGRES_DB=$POSTGRES_DB" >> .env
+            echo "DJANGO_DEBUG=false" >> .env
+            echo "ENVIRONMENT=test" >> .env
+            echo "POSTGRES_HOST=db" >> .env
+            echo "POSTGRES_PORT=5432" >> .env
+            echo "POSTGRES_DB=ngip" >> .env
             echo "POSTGRES_USER=$POSTGRES_USER" >> .env
             echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
-            echo "REDIS_HOST=$REDIS_HOST" >> .env
-            echo "REDIS_PORT=$REDIS_PORT" >> .env
+            echo "REDIS_HOST=redis" >> .env
+            echo "REDIS_PORT=6379" >> .env
             echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
-            echo "MQTT_HOST=$MQTT_HOST" >> .env
-            echo "MQTT_PORT=$MQTT_PORT" >> .env
+            echo "MQTT_HOST=mqtt" >> .env
+            echo "MQTT_PORT=1883" >> .env
             echo "ADMIN_NAME=$ADMIN_NAME" >> .env
             echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
           '''
