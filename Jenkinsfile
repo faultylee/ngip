@@ -58,6 +58,7 @@ pipeline {
         docker { image 'faulty/aws-cli-docker:latest' }
       }
       steps {
+        sleep 5
         sh '''
           test=$(curl -s -L  http://localhost:8000/ping/ | jq ".[] | .account" -r)
           if [ -z "$test" ]; then
@@ -81,10 +82,11 @@ pipeline {
         build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
         sh '''
             cd web/middleware
-            docker-compose stop
             docker-compose rm -fs
-            wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/$NGIP_BUILD_URL/consoleText
         '''
+        withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME')]) {
+            wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/$NGIP_BUILD_URL/consoleText
+        }
       }
     }
   }
