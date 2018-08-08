@@ -39,7 +39,7 @@ pipeline {
           '''
         }
     }
-    stage('Test1') {
+    stage('Web Up') {
       agent any
         steps {
           sh '''
@@ -53,13 +53,16 @@ pipeline {
           '''
         }
     }
-    stage('Test2') {
+    stage('Web Test') {
       agent {
         docker { image 'faulty/aws-cli-docker:latest' }
       }
       steps {
         sh '''
-          curl -s -L  http://localhost:8000/ping | jq ".[] | .account" -r
+          test=$(curl -s -L  http://localhost:8000/ping | jq ".[] | .account" -r)
+          if [[ "$test" == "Account: test" ]]; then
+            exit 127
+          fi
         '''
         script {
           timeout(time: 10, unit: 'MINUTES') {
