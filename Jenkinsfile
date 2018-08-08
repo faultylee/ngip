@@ -58,7 +58,6 @@ pipeline {
         docker { image 'faulty/aws-cli-docker:latest' }
       }
       steps {
-        sleep 10
         sh '''
           test=$(curl -s -L  http://localhost:8000/ping/ | jq ".[] | .account" -r)
           if [ -z "$test" ]; then
@@ -68,17 +67,17 @@ pipeline {
             exit 127
           fi
         '''
-        script {
-          timeout(time: 10, unit: 'MINUTES') {
-            input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
-          }
-        }
       }
     }
   }
   post {
     always {
       node('master') {
+        script {
+          timeout(time: 10, unit: 'MINUTES') {
+            input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
+          }
+        }
         build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
         sh '''
             cd web/middleware
@@ -88,7 +87,7 @@ pipeline {
           sh '''
             wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
             docker run --rm -i --net="host"\
-              --volume $(pwd):/data
+              --volume $(pwd):/data \
               --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
               --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
               --env AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \
