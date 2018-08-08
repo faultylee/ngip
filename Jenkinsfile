@@ -62,7 +62,7 @@ pipeline {
       }
       steps {
         sh '''
-          sleep 600
+          ping build.nip.io -c 1
           test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
           if [ -z "$test" ]; then
             exit 127
