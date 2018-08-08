@@ -57,12 +57,12 @@ pipeline {
       agent {
         docker {
           image 'faulty/aws-cli-docker:latest'
-          args '--net="host"'
+          args '-u 0 --net="host"'
         }
       }
       steps {
         sh '''
-          ping build.nip.io -c 1
+          ping build.ngip.io -c 1
           test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
           if [ -z "$test" ]; then
             exit 127
@@ -79,7 +79,7 @@ pipeline {
       node('master') {
         agent {
           image 'faulty/aws-cli-docker:latest'
-          args '--net="host"'
+          args '-u 0 --net="host"'
         }
         script {
           timeout(time: 10, unit: 'MINUTES') {
