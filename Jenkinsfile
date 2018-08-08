@@ -63,7 +63,7 @@ pipeline {
       steps {
         sh '''
           ping build.ngip.io -c 1
-          test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
+          test=$(curl -s -L  http://localhost:80)
           echo $test
           if [ -z "$test" ]; then
             exit 127
