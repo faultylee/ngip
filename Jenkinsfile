@@ -76,7 +76,7 @@ pipeline {
   post {
     always {
       node('master') {
-        docker {
+        agent {
           image 'faulty/aws-cli-docker:latest'
           args '--net="host"'
         }
