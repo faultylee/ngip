@@ -1,17 +1,11 @@
 pipeline {
   agent {
-    docker {
-      image 'faulty/aws-cli-docker:latest'
-      args '-u 0 --net="host"'
-    }
+    node {
+      label 'master'
+      }
   }
   stages {
     stage('Pre Web Build') {
-      agent {
-        node {
-          label 'master'
-          }
-      }
       steps {
         withCredentials([usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'), string(credentialsId: 'REDIS_PASSWORD', variable: 'REDIS_PASSWORD'), usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')]) {
           sh '''
@@ -35,11 +29,6 @@ pipeline {
       }
     }
     stage('Web Build') {
-      agent {
-        node {
-          label 'master'
-          }
-      }
       steps {
         sh '''
           cd web/middleware
@@ -49,11 +38,6 @@ pipeline {
       }
     }
     stage('Web Up') {
-      agent {
-        node {
-          label 'master'
-          }
-      }
       steps {
         sh '''
           cd web/middleware
@@ -62,6 +46,12 @@ pipeline {
       }
     }
     stage('Web Test') {
+      agent {
+        docker {
+          image 'faulty/aws-cli-docker:latest'
+          args '-u 0 --net="host"'
+        }
+      }
       steps {
         sh '''
           sleep 10
@@ -91,16 +81,22 @@ pipeline {
         '''
         build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
       }
-      withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-        script {
-          steps {
-            sh '''
-              wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
-              aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
-            '''
-          }
-        }
-      }
+      #withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+      #  script {
+      #    agent {
+      #      docker {
+      #        image 'faulty/aws-cli-docker:latest'
+      #        args '-u 0 --net="host"'
+      #      }
+      #    }
+      #    steps {
+      #      sh '''
+      #        wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
+      #        aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
+      #      '''
+      #    }
+      #  }
+      #}
     }
   }
 }
