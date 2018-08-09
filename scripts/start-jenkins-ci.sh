@@ -30,10 +30,12 @@ function check_and_trigger_build(){
 
     # force trigger in case travis job is restarted to kick start Jenkins
     if [ "$firstStart" = true ]; then
+      echo "First Start"
       triggered=false
     fi
     #docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
     if [ "$triggered" = false ]; then
+      echo "Starting"
       docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/build?delay=0sec
     fi
     exit 0
