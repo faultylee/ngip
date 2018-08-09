@@ -10,18 +10,28 @@ source ./docker_helper.sh
 function check_and_trigger_build(){
   if [[ "$(docker_run curl --connect-timeout 15 -s -o /dev/null -w ''%{http_code}'' http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/)" == "200" ]]; then
 
+    firstStart=false
+    # counter > 0 meaning Jenkins CI server was not started before this
+    if [ $1 -gt 0 ]; then
+      firstStart=true
+    fi
     triggered=false
     for job_url in $(docker_run curl -s http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/api/json | docker_run_i jq -r '.jobs[]? | .url'); do
-      echo ${job_url}
       last_build_url=$(docker_run curl -s ${job_url/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io}api/json | docker_run_i jq -r '.lastBuild? | .url')
       if [ -n "$last_build_url" ]; then
+        echo ${last_build_url}
         commit_sha=$(curl -s "${last_build_url/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io}api/json" | docker_run_i jq -r '.actions[]? | .lastBuiltRevision | .SHA1 | select(. != null)')
         if [ "$commit_sha" = "$TRAVIS_COMMIT" ]; then
+          echo "    Triggered"
           triggered=true
         fi
       fi
     done
 
+    # force trigger in case travis job is restarted to kick start Jenkins
+    if [ "$firstStart" = true ]; then
+      triggered=false
+    fi
     #docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
     if [ "$triggered" = false ]; then
       docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/build?delay=0sec
@@ -82,4 +92,4 @@ if [ $result -eq 0 ]; then
   exit 1
 fi
 
-check_and_trigger_build
+check_and_trigger_build $counter
