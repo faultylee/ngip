@@ -5,8 +5,8 @@ pipeline {
         }
     }
     environment {
-      TERRAFORM_CMD = 'docker run --rm --network host -w /app -v ${HOME}/.aws:/root/.aws -v ${HOME}/.ssh:/root/.ssh -v $(pwd):/app hashicorp/terraform:light'
-      AWS_CMD='docker run --rm -i -u 0 --network host --volume $(pwd):/data --env AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --env AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
+      TERRAFORM_CMD = 'docker run --rm --network host -w /app -v ${HOME}/.aws:/root/.aws -v ${HOME}/.ssh:/root/.ssh -v `pwd`:/app hashicorp/terraform:light'
+      AWS_CMD='docker run --rm -i -u 0 --network host --volume `pwd`:/data --env AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --env AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
     }
     stages {
         stage('Pre Web Build') {
@@ -53,10 +53,10 @@ pipeline {
             steps {
                 sh '''
                     sleep 10
-                    if [ -z "$($AWS_CMD curl -s -L  http://localhost:8000/ping/ | $AWS_CMD jq '.[] | .account' -r)" ]; then
+                    if [ -z "$({$AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r)" ]; then
                     exit 127
                     fi
-                    if [[ "$($AWS_CMD curl -s -L  http://localhost:8000/ping/ | $AWS_CMD jq '.[] | .account' -r)" != "Account: test" ]]; then
+                    if [[ "$(${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r)" != "Account: test" ]]; then
                     exit 127
                     fi
                 '''
@@ -82,8 +82,8 @@ pipeline {
             build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
             withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
               sh '''
-                $AWS_CMD wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
-                $AWS_CMD aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
+                ${AWS_CMD} wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
+                ${AWS_CMD} aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
               '''
             }
         }
