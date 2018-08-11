@@ -4,6 +4,10 @@ pipeline {
             label 'master'
         }
     }
+    environment {
+      TERRAFORM_CMD = 'docker run --rm --network host -w /app -v ${HOME}/.aws:/root/.aws -v ${HOME}/.ssh:/root/.ssh -v `pwd`:/app hashicorp/terraform:light'
+      AWS_CMD='docker run --rm -i -u 0 --network host --volume `pwd`:/data --env AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --env AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
+    }
     stages {
         stage('Pre Web Build') {
             steps {
@@ -40,27 +44,19 @@ pipeline {
         stage('Web Up') {
             steps {
                 sh '''
-          cd web/middleware
-          docker-compose up -d
-        '''
+                  cd web/middleware
+                  docker-compose up -d
+                '''
             }
         }
         stage('Web Test') {
-            agent {
-                docker {
-                    image 'faulty/aws-cli-docker:latest'
-                    args '-u 0 --net="host"'
-                }
-            }
             steps {
                 sh '''
                     sleep 10
-                    test=$(curl -s -L  http://localhost:8000/ping/ | jq '.[] | .account' -r)
-                    echo $test
-                    if [ -z "$test" ]; then
+                    if [ -z "$($AWS_CMD curl -s -L  http://localhost:8000/ping/ | $AWS_CMD jq '.[] | .account' -r)" ]; then
                     exit 127
                     fi
-                    if [[ "$test" != "Account: test" ]]; then
+                    if [[ "$($AWS_CMD curl -s -L  http://localhost:8000/ping/ | $AWS_CMD jq '.[] | .account' -r)" != "Account: test" ]]; then
                     exit 127
                     fi
                 '''
@@ -81,27 +77,16 @@ pipeline {
                     }
                 }
                 sh '''
-            cd web/middleware
-            docker-compose rm -fs
-        '''
+                    cd web/middleware
+                    docker-compose rm -fs
+                '''
                 build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
             }
-//      withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-//        script {
-//          agent {
-//            docker {
-//              image 'faulty/aws-cli-docker:latest'
-//              args '-u 0 --net="host"'
-//            }
-//          }
-//          steps {
-//            sh '''
-//              wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
-//              aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
-//            '''
-//          }
-//        }
-//      }
+        withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+          sh '''
+            $AWS_CMD wget -O build.log --auth-no-challenge http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$BRANCH_NAME/$BUILD_ID/consoleText
+            $AWS_CMD aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type "text/plain"
+          '''
         }
     }
 }
