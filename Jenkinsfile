@@ -5,8 +5,8 @@ pipeline {
         }
     }
     environment {
-      TERRAFORM_CMD = 'docker run --rm --network host -w /app -v ${HOME}/.aws:/root/.aws -v ${HOME}/.ssh:/root/.ssh -v $(pwd):/app hashicorp/terraform:light'
-      AWS_CMD='docker run --rm -i -u 0 --network host --volume $(pwd):/data --env AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --env AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
+      TERRAFORM_CMD="docker run --rm --network host -w /app -v ${HOME}/.aws:/root/.aws -v ${HOME}/.ssh:/root/.ssh -v $(pwd):/app hashicorp/terraform:light"
+      AWS_CMD="docker run --rm -i -u 0 --network host --volume $(pwd):/data --env AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --env AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest"
     }
     stages {
         stage('Pre Web Build') {
