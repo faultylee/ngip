@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 # This script will is to be triggered by a CI from code checkin, and check if Jenkins CI server is up, will bring it up if not, and also trigger the build on it.
 
 if [ -e ../.env ]; then
@@ -36,7 +36,7 @@ function check_and_trigger_build(){
     #docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
     if [ "$triggered" = false ]; then
       echo "Starting"
-      docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/build?delay=0sec
+      docker_run curl -s -X POST http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/job/$TRAVIS_BRANCH/build?delay=0sec
     fi
     exit 0
   fi
@@ -73,9 +73,6 @@ function authorize_ip(){
 #docker_run curl -s https://dnsjson.com/nat.travisci.net/A.json \
 #  | jq -r '.results.records|sort | .[]' \
 #  | while read IP; do authorize_ip $IP; done
-
-# if Jenkins CI Server already running, trigger tge build straight away
-check_and_trigger_build
 
 docker_run aws ec2 start-instances --instance-ids $JENKINS_INSTANCE_ID
 
