@@ -17,10 +17,10 @@ function check_and_trigger_build(){
     fi
     triggered=false
     for job_url in $(docker_run curl -s http://$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/jenkins/job/ngip/api/json | docker_run_i jq -r '.jobs[]? | .url'); do
-      last_build_url=$(docker_run curl -s ${job_url}/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/api/json | docker_run_i jq -r '.lastBuild? | .url')
+      last_build_url=$(docker_run curl -s ${job_url/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io}api/json | docker_run_i jq -r '.lastBuild? | .url')
       if [ -n "$last_build_url" ]; then
         echo ${last_build_url}
-        commit_sha=$(docker_run curl -s ${last_build_url}/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io/api/json | docker_run_i jq -r '.actions[]? | .lastBuiltRevision | .SHA1 | select(. != null)')
+        commit_sha=$(docker_run curl -s "${last_build_url/build.ngip.io/$JENKINS_API_USERNAME:$JENKINS_API_TOKEN@build.ngip.io}api/json" | docker_run_i jq -r '.actions[]? | .lastBuiltRevision | .SHA1 | select(. != null)')
         if [ "$commit_sha" = "$TRAVIS_COMMIT" ]; then
           echo "    Triggered"
           triggered=true
