@@ -53,10 +53,10 @@ pipeline {
             steps {
                 sh '''
                     sleep 10
-                    if [ -z $(eval "$({$AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r)") ]; then
+                    if [ -z $(eval "{$AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") ]; then
                     exit 127
                     fi
-                    if [[ $(eval "$(${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r)") != "Account: test" ]]; then
+                    if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") != "Account: test" ]]; then
                     exit 127
                     fi
                 '''
