@@ -130,8 +130,10 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 
 - [x] Setup basic working CI using Jenkins CI
 - [x] Setup CloudFront for S3
-- [ ] Build Django + Celery working skeleton
-- [ ] Setup CI to create EC2 instances and deploy app
+- [x] Build Django + Celery working skeleton
+- [x] Working CI using docker
+- [ ] Working infra CI using terraform and chef to initilize EC2 instances
+- [ ] Working CI with EC2 instances and deploy app
 - [ ] Email based signin token
 - [ ] Using Django as front-end to add/modify/remove checks
 - [ ] Sync function for updating of last ping time
