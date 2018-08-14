@@ -1,3 +1,16 @@
+provider "aws" {
+  region      = "ap-southeast-1"
+}
+terraform {
+  backend "s3" {
+    bucket = "ngip-private"
+    key    = "ngip-terraform.tfstate"
+    region = "ap-southeast-1"
+    encrypt = true
+    acl = "private"
+  }
+}
+
 variable "ami_id" {
   description = "Amazon Linux 2"
   default = "ami-05868579"
@@ -18,13 +31,9 @@ variable "key_file" {
   default = "id_rsa_aws_jenkins"
 }
 
-variable "key_file_path" {
-  description = "Private Key Path"
-  default = "id_rsa_aws_jenkins"
-}
-
-provider "aws" {
-  region      = "ap-southeast-1"
+data "aws_s3_bucket_object" "key_file" {
+  bucket = "ngip-private"
+  key    = "id_rsa_aws_jenkins"
 }
 
 resource "aws_security_group" "ngip-web" {
@@ -70,7 +79,7 @@ resource "aws_instance" "ngip-web" {
     connection {
       type        = "ssh"
       user        = "ec2-user"
-      private_key = "${file(var.key_file_path)}"
+      private_key = "${data.aws_s3_bucket_object.key_file.body}"
       agent       = false
       timeout     = "2m"
     }
@@ -80,6 +89,7 @@ resource "aws_instance" "ngip-web" {
       "sudo yum -y update",
       "curl -L https://omnitruck.chef.io/install.sh | sudo bash",
       "chef-client --version",
+      "chef-solo --version",
     ]
   }
 }
