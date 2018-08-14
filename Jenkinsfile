@@ -5,8 +5,9 @@ pipeline {
         }
     }
     environment {
-      TERRAFORM_CMD='docker run --rm --network host -w /app -v $(pwd):/app -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} hashicorp/terraform:light'
-      AWS_CMD='docker run --rm -i -u 0 --network host -v $(pwd):/data -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
+        TF_LOG='INFO'
+        TERRAFORM_CMD='docker run --rm --network host -w /app -v $(pwd):/app -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} -e TF_LOG=${TF_LOG} hashicorp/terraform:light'
+        AWS_CMD='docker run --rm -i -u 0 --network host -v $(pwd):/data -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
     }
     stages {
         stage('Pre Web Build') {
@@ -30,6 +31,14 @@ pipeline {
                         echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
                     '''
                 }
+            }
+        }
+        stage('Setup Stack') {
+            steps {
+                sh '''
+                    cd stack/web
+                    eval "${TERRAFORM_CMD} apply --auto-approve"
+                '''
             }
         }
         stage('Web Build') {
