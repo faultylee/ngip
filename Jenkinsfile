@@ -38,7 +38,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
                   sh '''
-                    cd stack/web
+                    cd stack/aws
+                    eval "${TERRAFORM_CMD} init"
                     eval "${TERRAFORM_CMD} apply --auto-approve"
                   '''
                 }
@@ -121,7 +122,7 @@ pipeline {
             //build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
             withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
               sh '''
-                cd stack/web
+                cd stack/aws
                 eval "${TERRAFORM_CMD} destroy --auto-approve"
               '''
             }

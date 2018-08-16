@@ -80,7 +80,8 @@ resource "aws_instance" "ngip-web" {
   provisioner "remote-exec" {
     connection {
       type        = "ssh"
-      user        = "ec2-user"
+      //user        = "ec2-user"
+      user        = "admin"
       private_key = "${data.aws_s3_bucket_object.key_file.body}"
       agent       = false
       timeout     = "2m"
@@ -91,7 +92,7 @@ resource "aws_instance" "ngip-web" {
       "sudo yum -y update",
       "curl -L https://omnitruck.chef.io/install.sh | sudo bash",
       "chef-client --version",
-      "sudo chef-solo -c chef/solo.rb -o example_app"
+      "#sudo chef-solo -c chef/solo.rb -o example_app"
     ]
   }
 }
