@@ -8,6 +8,7 @@ pipeline {
         TF_LOG='INFO'
         TERRAFORM_CMD='docker run --rm --network host -w /app -v $(pwd):/app -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} -e TF_LOG=${TF_LOG} hashicorp/terraform:light'
         AWS_CMD='docker run --rm -i -u 0 --network host -v $(pwd):/data -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
+        DOCKER_LOGIN=''
     }
     stages {
         stage('Pre Web Build') {
@@ -81,17 +82,41 @@ pipeline {
                 '''
             }
         }
+        stage('Push to ECR') {
+            steps {
+                withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                    GIT_SHA=$(git log -1 --pretty=%h)
+                    docker tag ngip/ngip-middleware:latest 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
+                    docker tag ngip/ngip-middleware:latest 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$GIT_SHA
+                    # need to remove the trailing \r otherwise docker login will complain
+                    eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
+                  '''
+                }
+            }
+        }
     }
     post {
         always {
             script {
-                timeout(time: 10, unit: 'MINUTES') {
-                    input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
+                try {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        userInput = input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
+                    }
+                } catch(err) { // timeout reached or input false
+                    def user = err.getCauses()[0].getUser()
+                    if('SYSTEM' == user.toString()) { // SYSTEM means timeout.
+                        didTimeout = true
+                    } else {
+                        userInput = false
+                        echo "Aborted by: [${user}]"
+                    }
                 }
             }
             sh '''
                 cd web/middleware
                 docker-compose rm -fs
+                docker logout 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com
             '''
             //build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
             withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {

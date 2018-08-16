@@ -12,8 +12,10 @@ terraform {
 }
 
 variable "ami_id" {
-  description = "Amazon Linux 2"
-  default = "ami-05868579"
+  //description = "Amazon Linux 2"
+  //default = "ami-05868579"
+  description = "Debian Stretch 9.5"
+  default = "ami-0539351fee4a5a3b1"
 }
 
 variable "vpc_jenkins" {
@@ -89,7 +91,7 @@ resource "aws_instance" "ngip-web" {
       "sudo yum -y update",
       "curl -L https://omnitruck.chef.io/install.sh | sudo bash",
       "chef-client --version",
-      "chef-solo --version",
+      "sudo chef-solo -c chef/solo.rb -o example_app"
     ]
   }
 }

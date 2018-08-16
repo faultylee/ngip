@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: faulty/ngip-middleware-web
+    image: ngip/ngip-middleware
     stdin_open: true
     tty: true
     env_file:
