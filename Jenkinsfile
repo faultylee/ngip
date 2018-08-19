@@ -8,10 +8,9 @@ pipeline {
         TF_LOG='INFO'
         TERRAFORM_CMD='docker run --rm --network host -w /app -v $(pwd):/app -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} -e TF_LOG=${TF_LOG} hashicorp/terraform:light'
         AWS_CMD='docker run --rm -i -u 0 --network host -v $(pwd):/data -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faulty/aws-cli-docker:latest'
-        DOCKER_LOGIN=''
     }
     stages {
-        stage('Pre Web Build') {
+        stage('Pre Build') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'), string(credentialsId: 'REDIS_PASSWORD', variable: 'REDIS_PASSWORD'), usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')]) {
                     sh '''
@@ -32,37 +31,25 @@ pipeline {
                         echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
                     '''
                 }
-            }
-        }
-        stage('Setup Stack') {
-            steps {
-                withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-                  sh '''
-                    cd stack/aws
-                    eval "${TERRAFORM_CMD} init"
-                    eval "${TERRAFORM_CMD} apply --auto-approve"
-                  '''
+                sh 'echo $(git log -1 --pretty=%h) > pretty-sha.txt'
+                script {
+                    // trim removes leading and trailing whitespace from the string
+                    git_sha = readFile('pretty-sha.txt').trim()
                 }
             }
         }
-        stage('Web Build') {
+        stage('Middleware Build & Up') {
             steps {
                 sh '''
                     cd web/middleware
+                    docker build -t faulty/ngip-middleware-web:$git_sha .
+                    docker tag faulty/ngip-middleware-web:$git_sha faulty/ngip-middleware-web:latest
                     docker-compose rm -fs
-                    docker-compose build
+                    docker-compose up -d
                 '''
             }
         }
-        stage('Web Up') {
-            steps {
-                sh '''
-                  cd web/middleware
-                  docker-compose up -d
-                '''
-            }
-        }
-        stage('Web Test') {
+        stage('Middleware Test') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'), string(credentialsId: 'REDIS_PASSWORD', variable: 'REDIS_PASSWORD'), usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')]) {
                     sh '''
@@ -76,20 +63,41 @@ pipeline {
                         fi
                     '''
                 }
-                sh '''
-                    GIT_SHA=$(git log -1 --pretty=%h)
-                    docker tag faulty/ngip-middleware-web:latest faulty/ngip-middleware-web:$GIT_SHA
-          
-                '''
             }
         }
         stage('Push to ECR') {
             steps {
                 withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
+                    docker tag ngip/ngip-middleware:$git_sha ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
+                    docker tag ngip/ngip-middleware:$git_sha ${$AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$git_sha
+                    
+                    # need to remove the trailing \r otherwise docker login will complain
+                    eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
+                    docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$git_sha
+                    docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
+                  '''
+                }
+            }
+        }
+        stage('Setup Stack') {
+            steps {
+                withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                    cd stack/aws
+                    eval "${TERRAFORM_CMD} init"
+                    eval "${TERRAFORM_CMD} apply --auto-approve -var-file='test.tfvars'"
+                  '''
+                }
+            }
+        }
+        stage('Setup Test Infra') {
+            steps {
+                withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
                     GIT_SHA=$(git log -1 --pretty=%h)
-                    docker tag ngip/ngip-middleware:latest 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
-                    docker tag ngip/ngip-middleware:latest 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$GIT_SHA
+                    docker tag ngip/ngip-middleware:latest {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
+                    docker tag ngip/ngip-middleware:latest {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$GIT_SHA
                     # need to remove the trailing \r otherwise docker login will complain
                     eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
                   '''
@@ -117,13 +125,12 @@ pipeline {
             sh '''
                 cd web/middleware
                 docker-compose rm -fs
-                docker logout 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com
+                docker logout {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
             '''
-            //build job: 'ngip-post-build', parameters: [string(name: 'NGIP_BUILD_ID', value: env.BUILD_ID), string(name: 'NGIP_BRANCH_NAME', value: env.BRANCH_NAME)], wait: false
             withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
               sh '''
                 cd stack/aws
-                eval "${TERRAFORM_CMD} destroy --auto-approve"
+                eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='test.tfvars'"
               '''
             }
             withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {

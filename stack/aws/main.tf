@@ -1,3 +1,8 @@
+locals {
+  environment = "${var.environment != "" ? var.environment: "local"}"
+  name_prefix = "ngip-${local.environment}"
+}
+
 provider "aws" {
   region      = "ap-southeast-1"
 }
@@ -39,7 +44,7 @@ data "aws_s3_bucket_object" "key_file" {
 }
 
 resource "aws_security_group" "ngip-web" {
-  name = "ngip-web"
+  name = "${local.environment}-ngip-web"
   description = "Security group for ngip-web"
   vpc_id = "${var.vpc_jenkins}"
   ingress {
@@ -64,11 +69,43 @@ resource "aws_security_group" "ngip-web" {
   }
 }
 
+resource "aws_iam_instance_profile" "test_profile" {
+  name = "test_profile"
+  role = "${aws_iam_role.role.name}"
+}
+
+resource "aws_iam_role" "role" {
+  name = "test_role"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:GetRepositoryPolicy",
+                "ecr:DescribeRepositories",
+                "ecr:ListImages",
+                "ecr:DescribeImages",
+                "ecr:BatchGetImage"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
 resource "aws_instance" "ngip-web" {
   ami             = "${var.ami_id}"
   instance_type   = "t2.micro"
   tags {
-    Name = "ngip-web"
+    Name = "${local.name_prefix}-web-${count.index}"
   }
 
   key_name        = "${var.key_file}"
@@ -79,6 +116,7 @@ resource "aws_instance" "ngip-web" {
 
   provisioner "remote-exec" {
     connection {
+      host        = "${aws_instance.ngip-web.private_ip}"
       type        = "ssh"
       //user        = "ec2-user"
       user        = "admin"
