@@ -10,6 +10,7 @@ Typical monitoring use cases are:
 - IoT hub
 - IoT sensors
 - Presence of certain Wifi devices
+- Security tracker
 
 *Side note:* This is also a learning project for me to solidify my knowledge in DevOps around Jenkins, Chef and various AWS services.
 
