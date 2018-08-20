@@ -1,0 +1,9 @@
+vpc_cidr = "10.0.0.0/16"
+environment = "local"
+public_subnet_cidrs = ["10.0.0.0/24", "10.0.1.0/24"]
+availability_zones = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
+max_size = 1
+min_size = 5
+desired_capacity = 1
+instance_type = "t2.nano"
+az_index = 0

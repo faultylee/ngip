@@ -1,2 +1,2 @@
-//test environment
-environment = "prod"git cheery pick
+//production environment
+environment = "test"
