@@ -53,10 +53,10 @@ pipeline {
                 sh '''
                     GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
                     cd web/middleware
-                    docker build -t ngip-middleware-web:$GIT_SHA_PRETTY .
-                    docker tag ngip-middleware-web:$GIT_SHA_PRETTY ngip-middleware-web:latest
+                    docker build -t ngip/ngip-middleware-web:$GIT_SHA_PRETTY .
+                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ngip/ngip-middleware-web:latest
                     # Cannot use -it with manage.py test
-                    docker run --rm ngip-middleware python manage.py test --settings=middlware.test_settings 
+                    docker run --rm ngip/ngip-middleware-web:latest python manage.py test --settings=middlware.test_settings 
                 '''
             }
         }
