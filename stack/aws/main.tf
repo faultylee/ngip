@@ -2,16 +2,6 @@ provider "aws" {
   region      = "ap-southeast-1"
 }
 
-terraform {
-  backend "s3" {
-    bucket = "ngip-private"
-    key    = "${var.tfstate_name}"
-    region = "ap-southeast-1"
-    encrypt = true
-    acl = "private"
-  }
-}
-variable "tfstate_name" {}
 variable "environment" {}
 variable "vpc_cidr" {}
 variable "max_size" {}

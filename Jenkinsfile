@@ -125,6 +125,8 @@ pipeline {
                 ]) {
                     sh '''
                     cd stack/aws
+                    rm local.tf
+                    cp environment/test.tf ./local.tf
                     eval "${TERRAFORM_CMD} init"
                     eval "${TERRAFORM_CMD} apply --auto-approve -var-file='test.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                   '''
@@ -183,6 +185,8 @@ pipeline {
             withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
               sh '''
                 cd stack/aws
+                rm local.tf
+                cp environment/test.tf ./local.tf
                 eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='test.tfvars'"
               '''
             }
