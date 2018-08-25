@@ -105,8 +105,8 @@ pipeline {
                 ]) {
                     sh '''
                     GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
-                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
-                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$GIT_SHA_PRETTY
+                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:latest
+                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:$GIT_SHA_PRETTY
                     
                     # need to remove the trailing \r otherwise docker login will complain
                     eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
