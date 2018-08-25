@@ -5,13 +5,13 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket = "ngip-private"
-    key    = "ngip-terraform.tfstate"
+    key    = "${var.tfstate_name}"
     region = "ap-southeast-1"
     encrypt = true
     acl = "private"
   }
 }
-
+variable "tfstate_name" {}
 variable "environment" {}
 variable "vpc_cidr" {}
 variable "max_size" {}

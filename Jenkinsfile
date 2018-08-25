@@ -272,6 +272,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
 //    hipchatSend(color: color, notify: true, message: summary, token: "${env.HIPCHAT_TOKEN}",
 //            failOnError: true, room: "${env.HIPCHAT_ROOM}", sendAs: 'Jenkins', textFormat: true)
     if (buildStatus == 'FAILURE') {
+        //recipientProviders requires Plugin:Email Extension
         emailext attachLog: true, body: summary, compressLog: true, recipientProviders: [brokenTestsSuspects(), brokenBuildSuspects(), culprits()], replyTo: 'noreply@ngip.io', subject: subject, to: 'build@ngip.io'
     }
 }
