@@ -147,7 +147,7 @@ pipeline {
                     sh '''
                     cd stack/aws
                     eval "${TERRAFORM_CMD} init"
-                    eval "${TERRAFORM_CMD} apply --auto-approve -var-file='prod.tfvars'"
+                    eval "${TERRAFORM_CMD} plan -var-file='prod.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                   '''
                 }
             }
