@@ -55,7 +55,8 @@ pipeline {
                     cd web/middleware
                     docker build -t ngip-middleware-web:$GIT_SHA_PRETTY .
                     docker tag ngip-middleware-web:$GIT_SHA_PRETTY ngip-middleware-web:latest
-                    docker run --rm -it ngip-middleware python manage.py test --settings=middlware.test_settings 
+                    # Cannot use -it with manage.py test
+                    docker run --rm ngip-middleware python manage.py test --settings=middlware.test_settings 
                 '''
             }
         }
