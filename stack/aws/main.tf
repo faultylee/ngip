@@ -369,6 +369,7 @@ resource "aws_db_instance" "ngip-db" {
   engine            = "postgres"
   engine_version    = "${var.pg_version}"
   instance_class    = "${var.pg_instance_class}"
+  storage_type      = "gp2"
   allocated_storage = "${var.pg_allocated_storage}"
 
   name                                = "ngip"
