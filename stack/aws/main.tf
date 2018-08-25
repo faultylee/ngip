@@ -195,7 +195,7 @@ resource "aws_route" "peer_from_ngip_to_jenkins" {
 ########################
 
 resource "aws_security_group" "ngip-web" {
-  name        = "${local.environment}-ngip-web"
+  name        = "${local.name_prefix}-web"
   description = "Security group for ngip-web"
   vpc_id      = "${aws_vpc.ngip-vpc.id}"
 
