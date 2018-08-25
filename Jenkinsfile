@@ -39,6 +39,7 @@ pipeline {
                 }
                 sh '''
                     echo $(git log -1 --pretty=%h) > pretty-sha.txt
+                    cd web/middleware
                     docker-compose rm -fs
                 '''
                 script {
@@ -156,19 +157,19 @@ pipeline {
     post {
         always {
             script {
-                try {
+//                try {
                     timeout(time: 10, unit: 'MINUTES') {
                         userInput = input(id: "Stop Docker", message: "Stop Docker?", ok: 'Stop')
                     }
-                } catch(err) { // timeout reached or input false
-                    def user = err.getCauses()[0].getUser()
-                    if('SYSTEM' == user.toString()) { // SYSTEM means timeout.
-                        didTimeout = true
-                    } else {
-                        userInput = false
-                        echo "Aborted by: [${user}]"
-                    }
-                }
+//                } catch(err) { // timeout reached or input false
+//                    def user = err.getCauses()[0].getUser()
+//                    if('SYSTEM' == user.toString()) { // SYSTEM means timeout.
+//                        didTimeout = true
+//                    } else {
+//                        userInput = false
+//                        echo "Aborted by: [${user}]"
+//                    }
+//                }
             }
             notifyBuild("${currentBuild.currentResult}")
             sh '''
