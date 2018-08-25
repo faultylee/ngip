@@ -50,6 +50,10 @@ pipeline {
         }
         stage('Middleware Test') {
             steps {
+                script {
+                    // trim removes leading and trailing whitespace from the string
+                    git_sha = readFile('pretty-sha.txt').trim()
+                }
                 sh '''
                     cd web/middleware
                     docker build -t ngip-middleware-web:$git_sha .
@@ -101,6 +105,10 @@ pipeline {
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
+                    script {
+                        // trim removes leading and trailing whitespace from the string
+                        git_sha = readFile('pretty-sha.txt').trim()
+                    }
                     sh '''
                     docker tag ngip/ngip-middleware:$git_sha ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
                     docker tag ngip/ngip-middleware:$git_sha ${$AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$git_sha
@@ -131,10 +139,14 @@ pipeline {
         stage('Setup Test Infra') {
             steps {
                 withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    script {
+                        // trim removes leading and trailing whitespace from the string
+                        git_sha = readFile('pretty-sha.txt').trim()
+                    }
                     sh '''
                     GIT_SHA=$(git log -1 --pretty=%h)
                     docker tag ngip/ngip-middleware:latest {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:latest
-                    docker tag ngip/ngip-middleware:latest {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$GIT_SHA
+                    docker tag ngip/ngip-middleware:latest {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware:$git_sha
                     # need to remove the trailing \r otherwise docker login will complain
                     eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
                   '''
