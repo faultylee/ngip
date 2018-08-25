@@ -166,13 +166,12 @@ pipeline {
     }
     post {
         always {
-            notifyBuild("${currentBuild.currentResult}")
             script {
                 echo "${currentBuild.currentResult}"
                 def destroy = true
                 try {
                     timeout(time: 15, unit: 'MINUTES') {
-                        userInput = input(id: "Destroy Stack", message: "Destroy Stack?", ok: 'Stop')
+                        userInput = input(id: "Destroy Stack", message: "Destroy Stack?", ok: 'Yes')
                     }
                 } catch(err) { // timeout reached or input false
                     // make sure to approve these 2 signature
