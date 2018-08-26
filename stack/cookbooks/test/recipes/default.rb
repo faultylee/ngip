@@ -10,6 +10,6 @@ docker_service 'default' do
     action [:create, :start]
 end
 
-docker_image 'faulty/aws-cli-docker' do
+docker_image 'faultylee/aws-cli-docker' do
     action :pull
 end

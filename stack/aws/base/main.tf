@@ -2,24 +2,37 @@ provider "aws" {
   region      = "ap-southeast-1"
 }
 
+data "terraform_remote_state" "jenkins" {
+  backend = "s3"
+
+  config {
+    bucket = "ngip-private"
+    key    = "jenkins.tfstate"
+    region = "ap-southeast-1"
+  }
+}
+
+data "aws_s3_bucket_object" "key_file" {
+  bucket = "ngip-private"
+  key    = "id_rsa_ngip"
+}
+
+locals {
+  environment = "${var.environment != "" ? var.environment: "local"}"
+  name_prefix = "ngip-${local.environment}"
+  // For prod specific setup
+  is_prod = "${local.environment == "prod" ? 1 : 0}"
+}
+
 variable "environment" {}
 variable "vpc_cidr" {}
-variable "max_size" {}
-variable "min_size" {}
-variable "desired_capacity" {}
-variable "instance_type" {}
-variable "az_index" {}
 variable "public_subnet_cidrs" {
   type = "list"
 }
 variable "availability_zones" {
   type = "list"
 }
-variable "short_availability_zones" {
-  type = "list"
-}
 
-variable "pg_end_point" { default = ""}
 variable "pg_instance_class" {}
 variable "pg_version" {}
 variable "pg_parameter_group" {}
@@ -32,60 +45,6 @@ variable "pg_snapshot_identifier" {}
 variable "pg_backup_window" {}
 variable "pg_backup_retention_period" {}
 variable "pg_monitoring_interval" {}
-
-variable "ami_id_debian" {
-  description = "Debian Stretch 9.5"
-  default     = "ami-0539351fee4a5a3b1"
-}
-
-variable "ami_id_al2" {
-  description = "Amazon Linux 2"
-  default     = "ami-05868579"
-}
-
-variable "ami_id_ecs" {
-  description = "amzn-ami-2018.03.e-amazon-ecs-optimized"
-  default     = "ami-091bf462afdb02c60"
-}
-
-variable "vpc_jenkins" {
-  description = "VPC for Jenkins"
-  default     = "vpc-0cb53cc89b0589890"
-}
-
-variable "subnet_pub_jenkins" {
-  description = "Public Subnet: Jenkins"
-  default     = "subnet-086734b335d13fc00"
-}
-
-variable "subnet_pub_jenkins_route" {
-  description = "Route Table of Public Subnet: Jenkins"
-  default     = "rtb-04ffac265e4850ec2"
-}
-
-variable "subnet_pub_jenkins_cidr" {
-  description = "Cidr of Public Subnet: Jenkins"
-  default     = "192.168.98.0/24"
-}
-
-variable "key_file" {
-  description = "AWS Key File Name"
-  default     = "id_rsa_ngip"
-}
-
-locals {
-  environment = "${var.environment != "" ? var.environment: "local"}"
-  name_prefix = "ngip-${local.environment}"
-  // For prod specific setup
-  is_prod = "${local.environment == "prod" ? 1 : 0}"
-  // If end point is provided, skip RDS creation
-  create_rds = "${var.pg_end_point != "" ? false : true}"
-}
-
-data "aws_s3_bucket_object" "key_file" {
-  bucket = "ngip-private"
-  key    = "id_rsa_ngip"
-}
 
 resource "aws_vpc" "ngip-vpc" {
   cidr_block           = "${var.vpc_cidr}"
@@ -101,6 +60,7 @@ resource "aws_internet_gateway" "ngip-vpc" {
   vpc_id = "${aws_vpc.ngip-vpc.id}"
 
   tags {
+    Name        = "${local.name_prefix}"
     Environment = "${local.name_prefix}"
   }
 }
@@ -112,7 +72,7 @@ resource "aws_subnet" "ngip-subnet-pub" {
   count             = "${length(var.public_subnet_cidrs)}"
 
   tags {
-    Name        = "${local.name_prefix}-pub-${element(var.short_availability_zones, count.index)}"
+    Name        = "${local.name_prefix}-pub-${element(var.availability_zones, count.index)}"
     Environment = "${local.name_prefix}"
   }
 }
@@ -141,7 +101,7 @@ resource "aws_route" "public_igw_route" {
 }
 
 resource "aws_vpc_peering_connection" "peering_to_jenkins" {
-  peer_vpc_id   = "${var.vpc_jenkins}"
+  peer_vpc_id   = "${data.terraform_remote_state.jenkins.jenkins-vpc-id}"
   vpc_id        = "${aws_vpc.ngip-vpc.id}"
   auto_accept   = true
 
@@ -156,7 +116,7 @@ resource "aws_vpc_peering_connection" "peering_to_jenkins" {
 
 resource "aws_route" "peer_from_jenkins_to_ngip" {
   count = "${aws_route_table.ngip-subnet-pub.count}"
-  route_table_id         = "${var.subnet_pub_jenkins_route}"
+  route_table_id         = "${data.terraform_remote_state.jenkins.jenkins-subnet-pub-route-id}"
   gateway_id             = "${aws_vpc_peering_connection.peering_to_jenkins.id}"
   destination_cidr_block = "${element(aws_subnet.ngip-subnet-pub.*.cidr_block, count.index)}"
 }
@@ -165,123 +125,7 @@ resource "aws_route" "peer_from_ngip_to_jenkins" {
   count = "${aws_route_table.ngip-subnet-pub.count}"
   route_table_id         = "${element(aws_route_table.ngip-subnet-pub.*.id, count.index)}"
   gateway_id             = "${aws_vpc_peering_connection.peering_to_jenkins.id}"
-  destination_cidr_block = "${var.subnet_pub_jenkins_cidr}"
-}
-
-########################
-# ELB
-########################
-
-//resource "aws_elb" "this" {
-//  name            = "${local.name_prefix}"
-//  subnets         = ["${var.public_subnet_cidrs}"]
-//  internal        = false
-//  security_groups = ["${var.security_groups}"]
-//
-//  cross_zone_load_balancing   = true
-//  idle_timeout                = "${var.idle_timeout}"
-//  connection_draining         = "${var.connection_draining}"
-//  connection_draining_timeout = "${var.connection_draining_timeout}"
-//
-//  listener     = ["${var.listener}"]
-//  access_logs  = ["${var.access_logs}"]
-//  health_check = ["${var.health_check}"]
-//
-//  tags = "${merge(var.tags, map("Name", format("%s", var.name)))}"
-//}
-
-########################
-# EC2 Web
-########################
-
-resource "aws_security_group" "ngip-web" {
-  name        = "${local.name_prefix}-web"
-  description = "Security group for ngip-web"
-  vpc_id      = "${aws_vpc.ngip-vpc.id}"
-
-  tags {
-    Environment   = "${local.name_prefix}"
-//    Cluster       = "${var.cluster}"
-//    InstanceGroup = "${var.instance_group}"
-  }
-
-  ingress {
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_instance" "ngip-web" {
-  count           = 1
-  ami             = "${var.ami_id_al2}"
-  instance_type   = "${var.instance_type}"
-  tags {
-    Name = "${local.name_prefix}-web-${element(var.short_availability_zones, count.index)}"
-  }
-
-  key_name        = "${var.key_file}"
-  associate_public_ip_address = true
-  subnet_id       = "${element(aws_subnet.ngip-subnet-pub.*.id, var.az_index)}"
-
-  vpc_security_group_ids = ["${aws_security_group.ngip-web.id}"]
-}
-
-resource "null_resource" remote-exec-chef-cookbooks {
-  depends_on = ["null_resource.local-exec-copy-chef-cookbooks"]
-  provisioner "remote-exec" {
-    connection {
-      host        = "${local.environment == "local" ? aws_instance.ngip-web.public_ip : aws_instance.ngip-web.private_ip}"
-      type        = "ssh"
-      user        = "ec2-user"
-      //user        = "admin"
-      private_key = "${data.aws_s3_bucket_object.key_file.body}"
-      agent       = false
-      timeout     = "2m"
-    }
-
-    inline = [
-      "sudo yum check-update",
-      "sudo yum -y update",
-      "curl -L https://omnitruck.chef.io/install.sh | sudo bash",
-      "chef-client --version",
-      "cd ~/cookbooks",
-      "sudo chef-solo -c solo.rb -o test::default"
-    ]
-  }
-}
-resource "null_resource" local-exec-copy-chef-cookbooks {
-
-  provisioner "file" {
-    // Upload cookbooks to /home/ec2-user/cookbooks
-    source = "/cookbooks"
-    destination = "/home/ec2-user/"
-  }
-
-  connection {
-    host        = "${local.environment == "local" ? aws_instance.ngip-web.public_ip : aws_instance.ngip-web.private_ip}"
-    type        = "ssh"
-    user        = "ec2-user"
-    //user        = "admin"
-    private_key = "${data.aws_s3_bucket_object.key_file.body}"
-    agent       = false
-    timeout     = "2m"
-  }
+  destination_cidr_block = "${data.terraform_remote_state.jenkins.jenkins-subnet-pub-cidr}"
 }
 
 ########################
@@ -298,7 +142,7 @@ resource "null_resource" local-exec-copy-chef-cookbooks {
 //}
 
 resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name               = "rds-enhanced_monitoring-role"
+  name               = "${local.name_prefix}rds-enhanced_monitoring-role"
   assume_role_policy = "${data.aws_iam_policy_document.rds_enhanced_monitoring.json}"
 }
 
@@ -329,6 +173,7 @@ resource "aws_db_subnet_group" "ngip-db" {
   subnet_ids  = ["${aws_subnet.ngip-subnet-pub.*.id}"]
 
   tags {
+    Name          = "${local.name_prefix}"
     Environment   = "${local.name_prefix}"
   }
 }
@@ -339,6 +184,7 @@ resource "aws_security_group" "ngip-db" {
   vpc_id      = "${aws_vpc.ngip-vpc.id}"
 
   tags {
+    Name          = "${local.name_prefix}"
     Environment   = "${local.name_prefix}"
   }
 
@@ -349,10 +195,17 @@ resource "aws_security_group" "ngip-db" {
     cidr_blocks = "${var.public_subnet_cidrs}"
   }
 
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["${data.terraform_remote_state.jenkins.jenkins-subnet-pub-cidr}"]
+  }
+
 }
 
 resource "aws_db_instance" "ngip-db" {
-  count = "${local.create_rds? 1 : 0}"
+  count = "1"
 
   identifier = "${local.environment}-ngip-db"
 
@@ -372,7 +225,7 @@ resource "aws_db_instance" "ngip-db" {
   db_subnet_group_name   = "${aws_db_subnet_group.ngip-db.name}"
   //parameter_group_name   = "${var.pg_parameter_group}"
 
-  availability_zone   = "${element(var.availability_zones, var.az_index)}"
+  multi_az            = "${local.is_prod? true : false}"
   publicly_accessible = false
   monitoring_interval = "${var.pg_monitoring_interval}"
   monitoring_role_arn = "${aws_iam_role.rds_enhanced_monitoring.arn}"
@@ -393,10 +246,38 @@ resource "aws_db_instance" "ngip-db" {
 
 }
 
-output "ngip_web_public_ip" {
-  value = "${aws_instance.ngip-web.*.public_ip}"
+data "aws_iam_policy_document" "ngip-ecr-readonly" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
 }
 
-output "ngip_db_address" {
-  value = "${aws_db_instance.ngip-db.*.address}"
+resource "aws_iam_role" "ngip-ecr-readonly" {
+  name = "${local.name_prefix}-ecr-readonly"
+  assume_role_policy = "${data.aws_iam_policy_document.ngip-ecr-readonly.json}"
 }
+
+resource "aws_iam_role_policy_attachment" "ngip-ecr-readonly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role = "${aws_iam_role.ngip-ecr-readonly.name}"
+}
+
+resource "aws_iam_instance_profile" "ngip-ecr-readonly-profile" {
+  name = "${local.name_prefix}-ecr-readonly"
+  role = "ngip-web-ecr-readonly"
+}
+
+output "ngip-vpc-id" { value = "${aws_vpc.ngip-vpc.id}" }
+output "ngip-db-address" { value = "${aws_db_instance.ngip-db.0.address}" }
+output "ngip-subnet-pub-id" { value = "${aws_subnet.ngip-subnet-pub.*.id}" }
+output "ngip-availability-zones" { value = "${aws_subnet.ngip-subnet-pub.*.availability_zone}" }
+output "ngip-ecr-readonly-id" { value = "${aws_iam_instance_profile.ngip-ecr-readonly-profile.id}" }

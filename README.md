@@ -15,6 +15,7 @@ Typical monitoring use cases are:
 
 ## Table of Contents
 
+- [Status](#status)
 - [Changelog](#changelog)
 - [Background](#background)
 - [Proposed Setup](#proposed-setup)
@@ -24,6 +25,10 @@ Typical monitoring use cases are:
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
 - [License](#license)
+
+## Status
+LastBuildLog: 
+- https://s3-ap-southeast-1.amazonaws.com/ngip-build-output/build.log
 
 ## Changelog
 #### 2018-07-15

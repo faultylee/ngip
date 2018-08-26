@@ -10,7 +10,7 @@ pipeline {
         AWS_CMD='docker run --rm -i -u 0 --network host -v $(pwd):/data -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} faultylee/aws-cli-docker:latest'
     }
     stages {
-        stage('Pre Build') {
+        stage('Middleware Build & Test') {
             steps {
                 script {
                     def now = new Date()
@@ -43,27 +43,23 @@ pipeline {
                     '''
                 }
                 sh '''
-                    echo $(git log -1 --pretty=%h) > pretty-sha.txt
                     env
-                    cd web/middleware
-                    docker-compose rm -fs
-                '''
-                script {
-                    // trim removes leading and trailing whitespace from the string
-                    GIT_SHA_PRETTY = readFile('pretty-sha.txt').trim()
-                }
-            }
-        }
-        stage('Middleware Test') {
-            steps {
-                sh '''
+                    # make sure we have the latest image
+                    docker pull faultylee/aws-cli-docker:latest
+                    docker pull hashicorp/terraform:light
+                    # for tagging purposes
                     GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
                     cd web/middleware
+                    docker-compose rm -fs
                     docker build -t ngip/ngip-middleware-web:$GIT_SHA_PRETTY .
                     docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ngip/ngip-middleware-web:latest
                     # Cannot use -it with manage.py test
                     # docker run --rm ngip/ngip-middleware-web:latest python manage.py test --settings=middlware.test_settings 
                 '''
+                script {
+                    // trim removes leading and trailing whitespace from the string
+                    GIT_SHA_PRETTY = readFile('pretty-sha.txt').trim()
+                }
             }
         }
         stage('Middleware Prepare Data') {
@@ -72,16 +68,7 @@ pipeline {
                 '''
             }
         }
-        stage('Middleware Build & Up') {
-            steps {
-                sh '''
-                    cd web/middleware
-                    docker-compose rm -fs
-                    docker-compose up -d
-                '''
-            }
-        }
-        stage('Middleware App Test') {
+        stage('Middleware Docker Test') {
             steps {
                 withCredentials([
                         usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'),
@@ -91,6 +78,9 @@ pipeline {
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
                 ]) {
                     sh '''
+                        cd web/middleware
+                        docker-compose rm -fs
+                        docker-compose up -d
                         sleep 10
                         echo $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r")
                         if [ -z $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") ]; then
@@ -110,15 +100,15 @@ pipeline {
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     sh '''
-                    GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
-                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:latest
-                    docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:$GIT_SHA_PRETTY
-                    
-                    # need to remove the trailing \r otherwise docker login will complain
-                    eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
-                    docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:$GIT_SHA_PRETTY
-                    docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:latest
-                  '''
+                        GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
+                        docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:latest
+                        docker tag ngip/ngip-middleware-web:$GIT_SHA_PRETTY ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:$GIT_SHA_PRETTY
+                        
+                        # need to remove the trailing \r otherwise docker login will complain
+                        eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
+                        docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:latest
+                        docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:$GIT_SHA_PRETTY
+                     '''
                 }
             }
         }
@@ -130,12 +120,19 @@ pipeline {
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
                 ]) {
                     sh '''
-                    cd stack/aws
-                    rm local.tf
-                    cp environment/stage.tf ./local.tf
-                    eval "${TERRAFORM_CMD} init"
-                    eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
-                  '''
+                        cd stack/aws/base
+                        rm local.tf
+                        cp environment/stage.tf ./local.tf
+                        eval "${TERRAFORM_CMD} init"
+                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
+                     '''
+                    sh '''
+                        cd stack/aws/middleware
+                        rm local.tf
+                        cp environment/stage.tf ./local.tf
+                        eval "${TERRAFORM_CMD} init"
+                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
+                     '''
                 }
             }
         }
@@ -143,7 +140,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
-                  '''
+                     '''
                 }
             }
         }
@@ -152,14 +149,19 @@ pipeline {
             //when { tag "release-*" }
             when { expression { BRANCH_NAME == 'master' } }
             steps {
-                withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh '''
-                    cd stack/aws
-                    rm local.tf
-                    cp environment/prod.tf ./local.tf
-                    eval "${TERRAFORM_CMD} init"
-                    eval "${TERRAFORM_CMD} plan -var-file='prod.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
-                  '''
+                withCredentials([
+                        string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
+                ]) {
+                    // PROD assumes base is already provisioned
+                    sh '''                    
+                        cd stack/aws/middleware
+                        rm local.tf
+                        cp environment/prod.tf ./local.tf
+                        eval "${TERRAFORM_CMD} init"
+                        eval "${TERRAFORM_CMD} plan -var-file='prod.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
+                     '''
                 }
             }
         }
@@ -194,7 +196,13 @@ pipeline {
                     '''
                     withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh '''
-                            cd stack/aws
+                            cd stack/aws/middleware
+                            rm local.tf
+                            cp environment/stage.tf ./local.tf
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'"
+                          '''
+                        sh '''
+                            cd stack/aws/base
                             rm local.tf
                             cp environment/stage.tf ./local.tf
                             eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'"
