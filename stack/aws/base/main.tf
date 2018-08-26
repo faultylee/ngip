@@ -273,7 +273,7 @@ resource "aws_iam_role_policy_attachment" "ngip-ecr-readonly" {
 
 resource "aws_iam_instance_profile" "ngip-ecr-readonly-profile" {
   name = "${local.name_prefix}-ecr-readonly"
-  role = "ngip-web-ecr-readonly"
+  role = "${aws_iam_role.ngip-ecr-readonly.name}"
 }
 
 output "ngip-vpc-id" { value = "${aws_vpc.ngip-vpc.id}" }
