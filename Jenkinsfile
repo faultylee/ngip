@@ -62,12 +62,6 @@ pipeline {
                 }
             }
         }
-        stage('Middleware Prepare Data') {
-            steps {
-                sh '''
-                '''
-            }
-        }
         stage('Middleware Docker Test') {
             steps {
                 withCredentials([
@@ -119,6 +113,7 @@ pipeline {
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
                 ]) {
+                    echo "Bring up base stack"
                     sh '''
                         cd stack/aws/base
                         rm local.tf
@@ -126,6 +121,14 @@ pipeline {
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                      '''
+                    echo "Restore latest data from prod DB"
+                    sh '''
+                        eval "${AWS_CMD} pg_dump postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:15432/ngip" > backup.sql
+                        echo "DROP DATABASE ngip;" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:15432/postgres"
+                        echo "CREATE DATABASE ngip WITH OWNER ${POSTGRES_USER}" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:15432/postgres"
+                        cat backup.sql | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:15432/ngip"
+                    '''
+                    echo "Bring up middleware stack"
                     sh '''
                         GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
                         cd stack/aws/middleware
