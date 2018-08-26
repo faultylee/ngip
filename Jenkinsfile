@@ -127,11 +127,12 @@ pipeline {
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                      '''
                     sh '''
+                        GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
                         cd stack/aws/middleware
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
-                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
+                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
                      '''
                 }
             }

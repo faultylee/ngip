@@ -12,6 +12,7 @@ data "terraform_remote_state" "jenkins" {
   }
 }
 
+variable "git_sha_pretty" { default = "latest" }
 variable "environment" {}
 variable "max_size" {}
 variable "min_size" {}
@@ -149,7 +150,7 @@ resource "null_resource" remote-exec-chef-cookbooks {
       "cd ~/cookbooks",
       "sudo chef-solo -c solo.rb -o test::default",
       "sudo $(sudo docker run --rm -i -e AWS_DEFAULT_REGION=ap-southeast-1 faultylee/aws-cli-docker:latest aws ecr get-login --no-include-email)",
-      "sudo docker pull 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:prod"
+      "sudo docker pull 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:${var.git_sha_pretty}"
     ]
   }
 }
