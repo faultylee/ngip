@@ -1,5 +1,5 @@
 provider "aws" {
-  region      = "ap-southeast-1"
+  region      = "${var.aws_region}"
 }
 
 data "terraform_remote_state" "jenkins" {
@@ -24,6 +24,7 @@ locals {
   is_prod = "${local.environment == "prod" ? 1 : 0}"
 }
 
+variable "aws_region" {}
 variable "environment" {}
 variable "vpc_cidr" {}
 variable "public_subnet_cidrs" {
