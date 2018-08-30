@@ -1,5 +1,4 @@
 //production environment
-environment = "prod"
 max_size = "1"
 min_size = "5"
 desired_capacity = "1"

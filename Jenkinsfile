@@ -111,11 +111,12 @@ pipeline {
                 withCredentials([
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
-                        usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
+                        usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER'),
+                        string(credentialsId: 'REDIS_PASSWORD', variable: 'REDIS_PASSWORD')
                 ]) {
-                    echo "Bring up base stack"
+                    echo "Bring up shared stack"
                     sh '''
-                        cd stack/aws/base
+                        cd stack/aws/shared
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
@@ -123,12 +124,15 @@ pipeline {
                      '''
                     echo "Restore latest data from prod DB"
                     sh '''
-                        cd stack/aws/base
-                        DB_ADDRESS=$(eval "${TERRAFORM_CMD} output ngip-db-address" | tr -d '\\r')
-                        eval "${AWS_CMD} pg_dump postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${NGIP_DB_PROD_ADDRESS}:5432/ngip" > backup.sql
-                        echo "DROP DATABASE ngip;" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/postgres"
-                        echo "CREATE DATABASE ngip WITH OWNER ${POSTGRES_USER}" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/postgres"
-                        cat backup.sql | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/ngip"
+                        # if PROD DB Address not configure, then we're not ready to clone live data from PROD
+                        if [ -n "$NGIP_DB_PROD_ADDRESS" ]; then
+                            cd stack/aws/base
+                            DB_ADDRESS=$(eval "${TERRAFORM_CMD} output ngip-db-address" | tr -d '\\r')
+                            eval "${AWS_CMD} pg_dump postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${NGIP_DB_PROD_ADDRESS}:5432/ngip" > backup.sql
+                            echo "DROP DATABASE ngip;" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/postgres"
+                            echo "CREATE DATABASE ngip WITH OWNER ${POSTGRES_USER}" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/postgres"
+                            cat backup.sql | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/ngip"
+                        fi
                     '''
                     echo "Bring up middleware stack"
                     sh '''
@@ -138,6 +142,15 @@ pipeline {
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
+                     '''
+                    echo "Bring up ping stack"
+                    sh '''
+                        GIT_SHA_PRETTY=$(git log -1 --pretty=%h)
+                        cd stack/aws/ping
+                        rm local.tf
+                        cp environment/stage.tf ./local.tf
+                        eval "${TERRAFORM_CMD} init"
+                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
                      '''
                 }
             }

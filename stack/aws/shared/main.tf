@@ -7,14 +7,14 @@ data "terraform_remote_state" "jenkins" {
 
   config {
     bucket = "ngip-private"
-    key    = "jenkins.tfstate"
+    key    = "stack/jenkins/jenkins.tfstate"
     region = "ap-southeast-1"
   }
 }
 
 data "aws_s3_bucket_object" "key_file" {
   bucket = "ngip-private"
-  key    = "id_rsa_ngip"
+  key    = "ssh/id_rsa_ngip"
 }
 
 locals {
@@ -46,8 +46,6 @@ variable "pg_snapshot_identifier" {}
 variable "pg_backup_window" {}
 variable "pg_backup_retention_period" {}
 variable "pg_monitoring_interval" {}
-
-variable "redis_password" {}
 
 resource "aws_vpc" "ngip-vpc" {
   cidr_block           = "${var.vpc_cidr}"
@@ -336,3 +334,5 @@ output "ngip-redis-address" { value = "${aws_elasticache_replication_group.ngip-
 output "ngip-subnet-pub-id" { value = "${aws_subnet.ngip-subnet-pub.*.id}" }
 output "ngip-availability-zones" { value = "${aws_subnet.ngip-subnet-pub.*.availability_zone}" }
 output "ngip-ecr-readonly-id" { value = "${aws_iam_instance_profile.ngip-ecr-readonly-profile.id}" }
+output "aws_region" { value = "${var.aws_region}"}
+output "environment" { value = "${var.environment}"}
