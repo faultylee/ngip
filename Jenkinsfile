@@ -58,7 +58,7 @@ pipeline {
                 '''
                 script {
                     // trim removes leading and trailing whitespace from the string
-                    GIT_SHA_PRETTY = readFile('pretty-sha.txt').trim()
+                    //GIT_SHA_PRETTY = readFile('pretty-sha.txt').trim()
                 }
             }
         }
@@ -76,6 +76,7 @@ pipeline {
                         docker-compose rm -fs
                         docker-compose up -d
                         sleep 10
+                        sudo chown -R tomcat:tomcat .
                         echo $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r")
                         if [ -z $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") ]; then
                         exit 127
@@ -120,6 +121,7 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
+                        sudo chown -R tomcat:tomcat .
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                      '''
                     echo "Restore latest data from prod DB"
@@ -141,6 +143,7 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
+                        sudo chown -R tomcat:tomcat .
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
                      '''
                     echo "Bring up ping stack"
@@ -150,6 +153,7 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
+                        sudo chown -R tomcat:tomcat .
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
                      '''
                 }
@@ -221,7 +225,7 @@ pipeline {
                             eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'"
                           '''
                         sh '''
-                            cd stack/aws/base
+                            cd stack/aws/shared
                             rm local.tf
                             cp environment/stage.tf ./local.tf
                             eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'"
