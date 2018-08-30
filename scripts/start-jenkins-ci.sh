@@ -25,6 +25,7 @@ function check_and_trigger_build(){
         if [ "$commit_sha" = "$TRAVIS_COMMIT" ]; then
           echo "    Triggered"
           triggered=true
+          break
         fi
       fi
     done

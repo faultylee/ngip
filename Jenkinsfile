@@ -56,10 +56,10 @@ pipeline {
                     # Cannot use -it with manage.py test
                     # docker run --rm ngip/ngip-middleware-web:latest python manage.py test --settings=middlware.test_settings 
                 '''
-                script {
+//                script {
                     // trim removes leading and trailing whitespace from the string
                     //GIT_SHA_PRETTY = readFile('pretty-sha.txt').trim()
-                }
+//                }
             }
         }
         stage('Middleware Docker Test') {
@@ -76,7 +76,6 @@ pipeline {
                         docker-compose rm -fs
                         docker-compose up -d
                         sleep 10
-                        sudo chown -R tomcat:tomcat .
                         echo $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r")
                         if [ -z $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") ]; then
                         exit 127
@@ -121,14 +120,13 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
-                        sudo chown -R tomcat:tomcat .
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                      '''
                     echo "Restore latest data from prod DB"
                     sh '''
                         # if PROD DB Address not configure, then we're not ready to clone live data from PROD
                         if [ -n "$NGIP_DB_PROD_ADDRESS" ]; then
-                            cd stack/aws/base
+                            cd stack/aws/shared
                             DB_ADDRESS=$(eval "${TERRAFORM_CMD} output ngip-db-address" | tr -d '\\r')
                             eval "${AWS_CMD} pg_dump postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${NGIP_DB_PROD_ADDRESS}:5432/ngip" > backup.sql
                             echo "DROP DATABASE ngip;" | eval "${AWS_CMD} psql postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_ADDRESS}:5432/postgres"
@@ -143,7 +141,6 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
-                        sudo chown -R tomcat:tomcat .
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
                      '''
                     echo "Bring up ping stack"
@@ -153,7 +150,6 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
-                        sudo chown -R tomcat:tomcat .
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'git_sha_pretty=$GIT_SHA_PRETTY'"
                      '''
                 }
@@ -177,7 +173,7 @@ pipeline {
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
                 ]) {
-                    // PROD assumes base is already provisioned
+                    // PROD assumes shared stack is already provisioned
                     sh '''                    
                         cd stack/aws/middleware
                         rm local.tf
@@ -213,6 +209,8 @@ pipeline {
                 }
                 if (destroy == true){
                     sh '''
+                        # reset file/dirs permission to allow next round of git cleanup
+                        sudo chown -R tomcat:tomcat .
                         cd web/middleware
                         docker-compose rm -fs
                         docker logout {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -222,13 +220,13 @@ pipeline {
                             cd stack/aws/middleware
                             rm local.tf
                             cp environment/stage.tf ./local.tf
-                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'"
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" | true
                           '''
                         sh '''
                             cd stack/aws/shared
                             rm local.tf
                             cp environment/stage.tf ./local.tf
-                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'"
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" | true
                           '''
                     }
                     withCredentials([usernamePassword(credentialsId: 'JENKINS_API_TOKEN', passwordVariable: 'JENKINS_API_TOKEN', usernameVariable: 'JENKINS_API_USERNAME'), string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
