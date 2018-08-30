@@ -1,0 +1,53 @@
+{
+  "resource": "/ngip-test/{pingToken}",
+  "path": "/ngip-test/0123456789/",
+  "httpMethod": "GET",
+  "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.9",
+    "cache-control": "max-age=0",
+    "dnt": "1",
+    "Host": "nik8g0f9xa.execute-api.ap-southeast-1.amazonaws.com",
+    "upgrade-insecure-requests": "1",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
+    "X-Amzn-Trace-Id": "Root=1-5b8278fb-e58d944402241458cbbb7ce0",
+    "X-Forwarded-For": "202.160.17.170",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https"
+  },
+  "queryStringParameters": null,
+  "pathParameters": {
+    "pingToken": "asdsdfasdf"
+  },
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "36k1kx",
+    "resourcePath": "/ngip-test/{pingToken}",
+    "httpMethod": "GET",
+    "extendedRequestId": "MOfXOFNLSQ0Fk_Q=",
+    "requestTime": "26/Aug/2018:09:55:07 +0000",
+    "path": "/default/ngip-test/0123456789/",
+    "accountId": "288211158144",
+    "protocol": "HTTP/1.1",
+    "stage": "default",
+    "requestTimeEpoch": 1535277307046,
+    "requestId": "1cafd4bd-a916-11e8-a728-e9df3126c219",
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "accountId": null,
+      "cognitoIdentityId": null,
+      "caller": null,
+      "sourceIp": "99.99.99.99",
+      "accessKey": null,
+      "cognitoAuthenticationType": null,
+      "cognitoAuthenticationProvider": null,
+      "userArn": null,
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
+      "user": null
+    },
+    "apiId": "nik8g0f9xa"
+  },
+  "body": null,
+  "isBase64Encoded": false
+}

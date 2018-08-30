@@ -46,6 +46,8 @@ variable "pg_backup_window" {}
 variable "pg_backup_retention_period" {}
 variable "pg_monitoring_interval" {}
 
+variable "redis_password" {}
+
 resource "aws_vpc" "ngip-vpc" {
   cidr_block           = "${var.vpc_cidr}"
   enable_dns_hostnames = true
@@ -131,15 +133,6 @@ resource "aws_route" "peer_from_ngip_to_jenkins" {
 ########################
 # RDS - Postgres
 ########################
-
-//resource "aws_cloudwatch_log_group" "ngip-db" {
-//  name = "${local.name_prefix}-db"
-//  retention_in_days = "${local.is_prod ? 45 : 1}"
-//  tags {
-//    Environment   = "${local.name_prefix}"
-//  }
-//
-//}
 
 resource "aws_iam_role" "rds_enhanced_monitoring" {
   name               = "${local.name_prefix}rds-enhanced_monitoring-role"
@@ -246,6 +239,66 @@ resource "aws_db_instance" "ngip-db" {
 
 }
 
+########################
+# Redis
+########################
+
+resource "aws_elasticache_subnet_group" "ngip-redis" {
+  name = "${local.name_prefix}-ngip-redis-subnet"
+  subnet_ids = ["${aws_subnet.ngip-subnet-pub.*.id}"]
+}
+
+resource "aws_security_group" "ngip-redis" {
+  name = "${local.name_prefix}-redis"
+  vpc_id      = "${aws_vpc.ngip-vpc.id}"
+
+  ingress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = "${var.public_subnet_cidrs}"
+  }
+
+  ingress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = ["${data.terraform_remote_state.jenkins.jenkins-subnet-pub-cidr}"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+//resource "aws_elasticache_security_group" "ngip-redis" {
+//  name = "${local.name_prefix}-redis"
+//  security_group_names = ["${aws_security_group.ngip-redis.name}"]
+//}
+
+resource "aws_elasticache_replication_group" "ngip-redis" {
+  automatic_failover_enabled    = "${local.is_prod}"
+  // Terraform doesn't allow list creation within ternary operator, so hae to use join and split to get a single list
+  // https://github.com/hashicorp/terraform/issues/12453#issuecomment-284273475
+  availability_zones            = ["${split(",", local.is_prod ? join(",", var.availability_zones) : element(var.availability_zones, 0))}"]
+  replication_group_id          = "${local.name_prefix}-rep-1"
+  replication_group_description = "Redis Replication Group for ${local.name_prefix}"
+  node_type                     = "cache.t2.micro"
+  number_cache_clusters         = "${local.is_prod ? length(var.availability_zones) : 1 }"
+  parameter_group_name          = "default.redis4.0"
+  subnet_group_name             = "${aws_elasticache_subnet_group.ngip-redis.name}"
+  security_group_ids            = ["${aws_security_group.ngip-redis.*.id}"]
+  #transit_encryption_enabled    = true
+  #auth_token                    = "${var.redis_password}"
+}
+
+########################
+# IAM - ECR
+########################
+
 data "aws_iam_policy_document" "ngip-ecr-readonly" {
   statement {
     actions = [
@@ -278,6 +331,7 @@ resource "aws_iam_instance_profile" "ngip-ecr-readonly-profile" {
 
 output "ngip-vpc-id" { value = "${aws_vpc.ngip-vpc.id}" }
 output "ngip-db-address" { value = "${aws_db_instance.ngip-db.0.address}" }
+output "ngip-redis-address" { value = "${aws_elasticache_replication_group.ngip-redis.primary_endpoint_address}" }
 output "ngip-subnet-pub-id" { value = "${aws_subnet.ngip-subnet-pub.*.id}" }
 output "ngip-availability-zones" { value = "${aws_subnet.ngip-subnet-pub.*.availability_zone}" }
 output "ngip-ecr-readonly-id" { value = "${aws_iam_instance_profile.ngip-ecr-readonly-profile.id}" }
