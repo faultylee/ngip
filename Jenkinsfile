@@ -1,3 +1,8 @@
+def GIT_SHA_PRETTY
+def DB_ADDRESS
+def REDIS_ADDRESS
+def WEB_PUBLIC_IP
+def PING_BASE_URL
 pipeline {
     agent {
         node {
@@ -15,7 +20,7 @@ pipeline {
                 script {
                     def now = new Date()
                     println "CI Started at " + now.format("yyyy-MM-dd HH:mm:ss")
-                    def GIT_SHA_PRETTY =  sh (returnStdout: true, script: 'git log -1 --pretty=%h')
+                    GIT_SHA_PRETTY =  sh (returnStdout: true, script: 'git log -1 --pretty=%h')
                     echo "GIT SHA = ${GIT_SHA_PRETTY}"
                 }
                 withCredentials([
