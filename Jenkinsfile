@@ -99,19 +99,19 @@ pipeline {
                         docker-compose up -d
                         sleep 10
                         
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/api/ping/ | ${AWS_CMD} jq '.[] | .name' -r") != "home" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/api/ping/ | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
                             exit 127
                         fi
 
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/api/ping/ | ${AWS_CMD} jq '.[] | .name' -r") != "home" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/api/ping/ | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
                             exit 127
                         fi
 
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:5000/ping/abc | ${AWS_CMD} jq '.[] | .body' -r") != "invalid token" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:5000/ping/abc | ${AWS_CMD} jq '.body' -r") != "invalid token" ]]; then
                             exit 127
                         fi
 
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/app/ping/abc | ${AWS_CMD} jq '.[] | .body' -r") != "invalid token" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/app/ping/abc | ${AWS_CMD} jq '.body' -r") != "invalid token" ]]; then
                             exit 127
                         fi
                     '''
@@ -149,7 +149,7 @@ pipeline {
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply -auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
-                        SHARED=$(eval "${TERRAFORM_CMD} output -json)"
+                        SHARED=$(eval "${TERRAFORM_CMD} output -json")
                         echo "$SHARED" | jq -r '.["ngip-db-address"].value' > db_address
                         echo "$SHARED" | jq -r '.["ngip-db-address"].value' > redis_address
                      '''
@@ -178,7 +178,7 @@ pipeline {
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}' -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
-                        MIDDLEWARE=$(eval "${TERRAFORM_CMD} output -json)"
+                        MIDDLEWARE=$(eval "${TERRAFORM_CMD} output -json")
                         echo "$MIDDLEWARE" | jq -r '.ngip_web_public_ip.value[]' > ngip_web_public_ip 
                      '''
                     script {
@@ -192,7 +192,7 @@ pipeline {
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
-                        PING=$(eval "${TERRAFORM_CMD} output -json)"
+                        PING=$(eval "${TERRAFORM_CMD} output -json")
                         echo "$PING" | jq -r '.base_url.value[]' > ping_base_url 
                      '''
                     script {
