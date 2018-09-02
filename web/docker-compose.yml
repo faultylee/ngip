@@ -5,20 +5,20 @@ services:
     image: postgres:9.6
     restart: "no"
     env_file: middleware/.env.docker
-#    ports:
-#    - "5432:5432"
-#    volumes:
-#    - pgdata:/var/lib/postgresql/data/
+  #    ports:
+  #    - "5432:5432"
+  #    volumes:
+  #    - pgdata:/var/lib/postgresql/data/
 
   redis:
     image: redis:4-32bit
-    env_file: middleware/.env.docker
+    env_file: middleware/.env
     command: redis-server --appendonly yes
     restart: "no"
-#    ports:
-#    - "6379:6379"
-#    volumes:
-#    - redisdata:/data
+  #    ports:
+  #    - "6379:6379"
+  #    volumes:
+  #    - redisdata:/data
 
   web:
     build:
@@ -28,14 +28,14 @@ services:
     stdin_open: true
     tty: true
     env_file:
-      - middleware/.env.docker
+    - middleware/.env
     hostname: web
     depends_on:
-      - db
-      - redis
+    - db
+    - redis
     command: ["./docker-entrypoint-web.sh"]
     ports:
-      - "8000:8000"
+    - "8000:8000"
     restart: "no"
 
   celery_worker:
@@ -43,9 +43,9 @@ services:
     restart: "no"
     command: sh -c 'celery -E -A middleware worker --loglevel=info --concurrency=2 -n celery@$ENVIRONMENT'
     depends_on:
-      - web
+    - web
     env_file:
-    - middleware/.env.docker
+    - middleware/.env
 
   celery_camera:
     image: ngip/ngip-middleware-web
@@ -55,7 +55,7 @@ services:
     - web
     - celery_worker
     env_file:
-    - middleware/.env.docker
+    - middleware/.env
 
   celery_beat:
     image: ngip/ngip-middleware-web
@@ -65,7 +65,7 @@ services:
     - web
     - celery_worker
     env_file:
-    - middleware/.env.docker
+    - middleware/.env
 
   ping:
     build:
@@ -75,7 +75,7 @@ services:
     stdin_open: true
     tty: true
     env_file:
-    - middleware/.env.docker
+    - middleware/.env
     depends_on:
     - redis
     command: sh -c 'gunicorn -w 2 -b 0.0.0.0:5000 fake_lambda:app'
@@ -86,11 +86,11 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - ./frontend/dist:/frontend
-      - ./middleware/static:/static
-      - ./middleware/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    - ./frontend/dist:/frontend
+    - ./middleware/static:/static
+    - ./middleware/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
     - "80:80"
     depends_on:
-      - web
-      - ping
+    - web
+    - ping

@@ -20,19 +20,23 @@ pipeline {
                 script {
                     def now = new Date()
                     println "CI Started at " + now.format("yyyy-MM-dd HH:mm:ss")
-                    GIT_SHA_PRETTY =  sh (returnStdout: true, script: 'git log -1 --pretty=%h')
+                    GIT_SHA_PRETTY =  sh (returnStdout: true, script: 'git log -1 --pretty=%h').trim()
                     echo "GIT SHA = ${GIT_SHA_PRETTY}"
                 }
                 withCredentials([
                         usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'),
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(credentialsId: 'DJANGO_SECRET_KEY', variable: 'SECRET_KEY'),
+                        string(credentialsId: 'AWS_NGIP_ACCESS_KEY_ID', variable: 'AWS_NGIP_ACCESS_KEY_ID'),
+                        string(credentialsId: 'AWS_NGIP_SECRET_ACCESS_KEY', variable: 'AWS_NGIP_SECRET_ACCESS_KEY'),
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
                 ]) {
                     sh '''
                         cd web/middleware
-                        echo "DJANGO_DEBUG=false" >> .env
+                        echo "DJANGO_DEBUG=false" > .env
                         echo "ENVIRONMENT=stage" >> .env
+                        echo "SECRET_KEY=$DJANGO_SECRET_KEY" >> .env
                         echo "POSTGRES_HOST=db" >> .env
                         echo "POSTGRES_PORT=5432" >> .env
                         echo "POSTGRES_DB=ngip" >> .env
@@ -43,6 +47,9 @@ pipeline {
                         echo "REDIS_DB=0" >> .env
                         echo "ADMIN_NAME=$ADMIN_NAME" >> .env
                         echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
+                        echo "AWS_DEFAULT_REGION=ap-southeast-1" >> .env
+                        echo "AWS_NGIP_ACCESS_KEY_ID=$AWS_NGIP_SECRET_ACCESS_KEY" >> .env
+                        echo "AWS_NGIP_SECRET_ACCESS_KEY=$AWS_NGIP_SECRET_ACCESS_KEY" >> .env
                     '''
                 }
                 sh '''
@@ -56,15 +63,16 @@ pipeline {
 
                     # build middleware docker
                     cd middleware
+                        #
                     docker build -t ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' .
                     docker tag ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' ngip/ngip-middleware-web:latest
 
                     # build middleware static file
-                    docker run --rm -w /app -v $(pwd):/app ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input
+                    docker run --rm -w /app -v $(pwd):/app --env-file .env ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input
 
                     # build fake_lambda/ping docker
                     cd ../ping
-                    docker build -t ngip/ngip-middleware-ping:''' + GIT_SHA_PRETTY + ''' .
+                    docker build -t ngip/ngip-middleware-ping:''' + GIT_SHA_PRETTY  + ''' .
                     docker tag ngip/ngip-middleware-ping:''' + GIT_SHA_PRETTY + ''' ngip/ngip-middleware-ping:latest
 
                     # build static page                    
@@ -226,6 +234,10 @@ pipeline {
     post {
         always {
             script {
+                sh '''
+                        # reset file/dirs permission to allow next round of git cleanup
+                        sudo chown -R tomcat:tomcat .
+                    '''
                 echo "${currentBuild.currentResult}"
                 def destroy = true
                 try {
@@ -247,8 +259,6 @@ pipeline {
                 }
                 if (destroy == true){
                     sh '''
-                        # reset file/dirs permission to allow next round of git cleanup
-                        sudo chown -R tomcat:tomcat .
                         cd web
                         docker-compose rm -fs
                         docker logout {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -286,7 +296,7 @@ pipeline {
                         eval "${AWS_CMD} aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type 'text/plain'"
                       '''
                 }
-                publish_cloudwatch_logs(logStreamName: "ngip-" + BRANCH_NAME)
+                //publish_cloudwatch_logs(logStreamName: "ngip-" + BRANCH_NAME)
             }
         }
     }
