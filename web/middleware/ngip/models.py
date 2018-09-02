@@ -113,13 +113,17 @@ class Ping(models.Model):
     account = models.ForeignKey(Account, null=True, related_name='accountpings')
     name = models.CharField(max_length=255)
     date_last_received = models.DateTimeField("Last Received", blank=True, null=True)
-    status = models.CharField(max_length=1, choices=STATUS.FLAGS)
+    status = models.CharField(max_length=1, choices=STATUS.FLAGS, default=STATUS.ACTIVE)
     notified = models.BooleanField(default=False)
+
+    # TODO: this is causing DRF serialization issue
+    # class Meta:
+    #     unique_together = ('account', 'name')
 
 
 class PingToken(AuditModel):
     ping = models.ForeignKey(Ping, related_name='pingtokens')
-    token = models.CharField(max_length=255)
+    token = models.CharField(max_length=255, unique=True)
     date_last_used = models.DateTimeField("Last Used", blank=True, null=True)
     previousToken = None
 

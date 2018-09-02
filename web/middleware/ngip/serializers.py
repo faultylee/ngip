@@ -2,7 +2,7 @@ from ngip.models import *
 from rest_framework import serializers
 
 
-class PingTokenSerializer(serializers.HyperlinkedModelSerializer):
+class PingTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PingToken
@@ -13,7 +13,7 @@ class PingSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Ping
-        fields = ('pk', 'account', 'name', 'date_last_received', 'status', 'notified', 'pingtokens')
+        fields = ('pk', 'name', 'date_last_received', 'status', 'notified', 'pingtokens')
 
 
 class AccountSerializer(serializers.HyperlinkedModelSerializer):

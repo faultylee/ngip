@@ -1,9 +1,16 @@
 import Vue from "vue";
-import App from "./App.vue";
+import App from './App.vue'
+import router from './router'
+import $backend from './backend'
 
+Vue.prototype.$backend = $backend
 Vue.config.productionTip = false;
 
-//https://medium.freecodecamp.org/the-vue-handbook-a-thorough-introduction-to-vue-js-1e86835d8446
-new Vue({
+// ref: https://github.com/gtalarico/django-vue-template
+
+const vue = new Vue({
+  router,
   render: h => h(App)
-}).$mount("#app");
+})
+
+vue.$mount('#app')

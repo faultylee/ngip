@@ -4,12 +4,18 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "serve_stage": "vue-cli-service serve --mode stage",
+    "serve_prod": "vue-cli-service serve --mode prod",
     "build": "vue-cli-service build",
+    "build_stage": "vue-cli-service build --mode stage",
+    "build_prod": "vue-cli-service build --mode prod",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
-    "vue": "^2.5.17"
+    "axios": "^0.18.0",
+    "vue": "^2.5.17",
+    "vue-router": "^3.0.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.1",
