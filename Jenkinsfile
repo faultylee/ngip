@@ -78,7 +78,7 @@ pipeline {
 
                     # build static page                    
                     cd ../frontend
-                    eval "${NPM_CMD} npm install && npm run build_prod"
+                    eval "${NPM_CMD} /bin/bash -c 'npm install && npm run build_prod'"
 
                     # Cannot use -it with manage.py test
                     # docker run --rm ngip/ngip-middleware-web:latest python manage.py test --settings=middlware.test_settings 
@@ -98,11 +98,20 @@ pipeline {
                         docker-compose rm -fs
                         docker-compose up -d
                         sleep 10
-                        echo $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r")
-                        if [ -z $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") ]; then
+                        
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/api/ping/ | ${AWS_CMD} jq '.[] | .name' -r") != "home" ]]; then
                             exit 127
                         fi
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/ping/ | ${AWS_CMD} jq '.[] | .account' -r") != "Account: test" ]]; then
+
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/api/ping/ | ${AWS_CMD} jq '.[] | .name' -r") != "home" ]]; then
+                            exit 127
+                        fi
+
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:5000/ping/abc | ${AWS_CMD} jq '.[] | .body' -r") != "invalid token" ]]; then
+                            exit 127
+                        fi
+
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/app/ping/abc | ${AWS_CMD} jq '.[] | .body' -r") != "invalid token" ]]; then
                             exit 127
                         fi
                     '''
