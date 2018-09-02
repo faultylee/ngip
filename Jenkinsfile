@@ -68,7 +68,8 @@ pipeline {
                     docker tag ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' ngip/ngip-middleware-web:latest
 
                     # build middleware static file
-                    docker run --rm -w /app -v $(pwd):/app --env-file .env ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input --settings middleware.dummy_settings
+                    # dummy settings did't work, celery still compaint of missing broker url 
+                    # docker run --rm -w /app -v $(pwd):/app --env-file .env ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input --settings middleware.dummy_settings
 
                     # build fake_lambda/ping docker
                     cd ../ping
