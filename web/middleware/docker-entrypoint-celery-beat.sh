@@ -10,7 +10,7 @@ function trap_func {
 
 trap trap_func EXIT SIGHUP SIGINT SIGTERM
 
-celery_beat_cmd="celery -A dashboard beat --loglevel=info -S django"
+celery_beat_cmd="celery -A middleware beat --loglevel=info -S django"
 
 cd dashboard
 pwd

@@ -1,0 +1,79 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:9.6
+    restart: "no"
+    env_file: middleware/.env.docker
+#    ports:
+#    - "5432:5432"
+#    volumes:
+#    - pgdata:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:4-32bit
+    env_file: middleware/.env.docker
+    command: redis-server --appendonly yes
+    restart: "no"
+#    ports:
+#    - "6379:6379"
+#    volumes:
+#    - redisdata:/data
+
+  web:
+    build:
+      context: ./middleware
+      dockerfile: ./Dockerfile
+    image: ngip/ngip-middleware-web
+    stdin_open: true
+    tty: true
+    env_file:
+      - middleware/.env.docker
+    hostname: web
+    depends_on:
+      - db
+      - redis
+    command: ["./docker-entrypoint-web.sh"]
+    ports:
+      - "8000:8000"
+    restart: "no"
+
+  celery_worker:
+    image: ngip/ngip-middleware-web
+    restart: "no"
+    command: sh -c 'celery -E -A middleware worker --loglevel=info --concurrency=2 -n celery@$ENVIRONMENT'
+    depends_on:
+      - web
+    env_file:
+    - middleware/.env.docker
+
+  celery_camera:
+    image: ngip/ngip-middleware-web
+    restart: "no"
+    command: sh -c 'rm -f celeryev.pid && celery -A middleware events --camera django_celery_monitor.camera.Camera --frequency=2.0 --loglevel=info'
+    depends_on:
+    - web
+    - celery_worker
+    env_file:
+    - middleware/.env.docker
+
+  celery_beat:
+    image: ngip/ngip-middleware-web
+    restart: "no"
+    command: ["./docker-entrypoint-celery-beat.sh"]
+    depends_on:
+    - web
+    - celery_worker
+    env_file:
+    - middleware/.env.docker
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./frontend/dist:/frontend
+      - ./middleware/static:/static
+      - ./middleware/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+    - "80:80"
+    depends_on:
+      - web

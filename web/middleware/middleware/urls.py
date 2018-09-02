@@ -16,8 +16,8 @@ router.register(r'token', views.PingTokenViewSet)
 router.register(r'user', views.UserViewSet)
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
-    url(r"^pingtokens/(?P<pk>.+)/$", views.PingTokenByPing.as_view()),
+    url(r'^api/', include(router.urls)),
+    url(r"^api/pingtokens/(?P<pk>.+)/$", views.PingTokenByPing.as_view()),
     url(r"^admin/", admin.site.urls),
     url(r'^admin/django-ses/', include('django_ses.urls'))
 ]
