@@ -67,6 +67,22 @@ services:
     env_file:
     - middleware/.env.docker
 
+  ping:
+    build:
+      context: ./ping
+      dockerfile: ./Dockerfile
+    image: ngip/ngip-middleware-ping
+    stdin_open: true
+    tty: true
+    env_file:
+    - middleware/.env.docker
+    depends_on:
+    - redis
+    command: sh -c 'gunicorn -w 2 -b 0.0.0.0:5000 fake_lambda:app'
+    ports:
+    - "5000:5000"
+    restart: "no"
+
   nginx:
     image: nginx:latest
     volumes:
@@ -77,3 +93,4 @@ services:
     - "80:80"
     depends_on:
       - web
+      - ping

@@ -11,7 +11,8 @@ export default {
       env:
         process.env.VUE_APP_ENVIRONMENT == "prod"
           ? ""
-          : process.env.VUE_APP_ENVIRONMENT
+          : process.env.VUE_APP_ENVIRONMENT,
+      ping_api: process.env.VUE_APP_PING_API
     };
   }
 };

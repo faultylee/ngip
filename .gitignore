@@ -108,3 +108,6 @@ venv.bak/
 
 # terraform
 .terraform
+
+/web/frontend/dist
+/web/middleware/static

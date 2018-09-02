@@ -19,7 +19,7 @@
         <tbody>
         <tr v-for="(token, index) in tokens" :key="index">
           <td>{{token.pk}}</td>
-          <td>{{token.token}}</td>
+          <td><a :href="ping_api + '/' + token.token">{{token.token}}</a></td>
           <td>{{token.date_last_used}}</td>
           <td>
             <button id="show-modal" @click="editToken(token.pk, token.token)">Edit</button>
@@ -69,6 +69,7 @@ export default {
   name: "Token",
   data() {
     return {
+      ping_api: process.env.VUE_APP_PING_API,
       ping_pk: "",
       ping: "",
       showEdit: false,
