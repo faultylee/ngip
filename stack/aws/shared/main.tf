@@ -46,6 +46,7 @@ variable "pg_snapshot_identifier" {}
 variable "pg_backup_window" {}
 variable "pg_backup_retention_period" {}
 variable "pg_monitoring_interval" {}
+variable "elb_https_certificate" {}
 
 resource "aws_vpc" "ngip-vpc" {
   cidr_block           = "${var.vpc_cidr}"
@@ -128,6 +129,79 @@ resource "aws_route" "peer_from_ngip_to_jenkins" {
   gateway_id             = "${aws_vpc_peering_connection.peering_to_jenkins.id}"
   destination_cidr_block = "${data.terraform_remote_state.jenkins.jenkins-subnet-pub-cidr}"
 }
+
+########################
+# ELB
+########################
+
+resource "aws_eip" "ngip-eip" {
+  vpc = true
+
+  depends_on                = ["aws_internet_gateway.ngip-vpc"]
+  tags {
+    Name        = "${local.name_prefix}"
+    Environment = "${local.name_prefix}"
+  }
+}
+
+resource "aws_lb_target_group" "ngip-web" {
+  name     = "${local.name_prefix}"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.ngip-vpc.id}"
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    path                = "/"
+    port                = 80
+    interval            = 10
+  }
+}
+
+resource "aws_lb" "ngip-elb" {
+  name               = "${local.name_prefix}-elb"
+
+  load_balancer_type = "application"
+
+  enable_cross_zone_load_balancing = true
+  subnets = ["${aws_subnet.ngip-subnet-pub.*.id}"]
+
+  tags {
+    Name          = "${local.name_prefix}"
+    Environment   = "${local.name_prefix}"
+  }
+}
+
+resource "aws_lb_listener" "ngip-web-https" {
+  load_balancer_arn = "${aws_lb.ngip-elb.arn}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${var.elb_https_certificate}"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.ngip-web.arn}"
+  }
+}
+
+resource "aws_lb_listener" "ngip-web-http" {
+  load_balancer_arn = "${aws_lb.ngip-elb.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      port = "443"
+      protocol = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
 
 ########################
 # RDS - Postgres
@@ -279,7 +353,7 @@ resource "aws_security_group" "ngip-redis" {
 //}
 
 resource "aws_elasticache_replication_group" "ngip-redis" {
-  automatic_failover_enabled    = "${local.is_prod}"
+  automatic_failover_enabled    = false //"${local.is_prod}" - disable for now
   // Terraform doesn't allow list creation within ternary operator, so hae to use join and split to get a single list
   // https://github.com/hashicorp/terraform/issues/12453#issuecomment-284273475
   availability_zones            = ["${split(",", local.is_prod ? join(",", var.availability_zones) : element(var.availability_zones, 0))}"]
@@ -329,6 +403,8 @@ resource "aws_iam_instance_profile" "ngip-ecr-readonly-profile" {
 }
 
 output "ngip-vpc-id" { value = "${aws_vpc.ngip-vpc.id}" }
+output "ngip-eip" { value = "${aws_eip.ngip-eip.id}" }
+output "ngip-public-ip" { value = "${aws_eip.ngip-eip.public_ip}" }
 output "ngip-db-address" { value = "${aws_db_instance.ngip-db.0.address}" }
 output "ngip-redis-address" { value = "${aws_elasticache_replication_group.ngip-redis.primary_endpoint_address}" }
 output "ngip-subnet-pub-id" { value = "${aws_subnet.ngip-subnet-pub.*.id}" }

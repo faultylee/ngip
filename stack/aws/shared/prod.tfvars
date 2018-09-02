@@ -16,3 +16,5 @@ pg_snapshot_identifier = "general-2018-08-22-03-52"
 pg_monitoring_interval = "5"
 pg_backup_retention_period = "7"
 pg_backup_window = "21:30-22:00"
+elb_https_certificate = "arn:aws:acm:ap-southeast-1:288211158144:certificate/2ba60807-4a96-4ba0-bd30-95774c5db227"
+
