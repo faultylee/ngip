@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 from datetime import timedelta
+from boto3.session import Session
+import logging
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,10 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "^wj%(pbdo(0v#5mdo13h)j5(z9y*rev6ae-@9q%4iz9mrnq5$@"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.environ['SECRET_KEY']
 
 ALLOWED_HOSTS = ['*', ]
 
@@ -32,8 +31,11 @@ ALLOWED_HOSTS = ['*', ]
 # Application definition
 # APPS
 # ------------------------------------------------------------------------------
+THEME_APPS = [
+]
 DJANGO_APPS = [
     "django.contrib.admin",
+    #"django.contrib.admin.apps.SimpleAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -46,19 +48,23 @@ THIRD_PARTY_APPS = [
     "rest_framework_swagger",
     "django_celery_beat",
     "django_celery_monitor",
+    "django_celery_results",
     "django_extensions",
     "bootstrap",
+    "django_ses",
+    "corsheaders",
 ]
 LOCAL_APPS = [
-    "ngip",
+    "ngip.apps.NgipConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = THEME_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -144,7 +150,7 @@ PRODUCTION = False
 # local = local debug
 ENVIRONMENT = 'local'
 if 'ENVIRONMENT' in os.environ:
-    PRODUCTION = os.environ['ENVIRONMENT'].upper() == 'PROD'
+    PRODUCTION = os.environ['ENVIRONMENT'].lower() == 'prod'
 
 
 DATABASES = {
@@ -158,12 +164,11 @@ DATABASES = {
     }
 }
 
-RUNNING_IN_DOCKER = False
 if ENVIRONMENT == 'local':
     # SECURITY WARNING: don't run with debug turned on in production!
     DEBUG = True
-    STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static_test')
+    #STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     # STATIC_ROOT = '/static'
     # DATABASES = {
     #     'default': {
@@ -176,7 +181,7 @@ else:
     STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
     STATIC_ROOT = '/code/data/static'
 
-CELERY_BROKER_URL = f'redis://:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
+CELERY_BROKER_URL = f'redis://{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}/0'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['application/json']
@@ -190,51 +195,6 @@ CELERY_MONITOR_TASK_PENDING_EXPIRES = timedelta(days=14)
 
 # TODO: CELERY_ALWAYS_EAGER - set during unittest
 
-MQTT_HOST = os.environ["MQTT_HOST"]
-MQTT_PORT = int(os.environ["MQTT_PORT"])
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#         },
-#         'mqtt_file': {
-#             'level': 'INFO',
-#             'class': 'touchpoint.log.ParallelTimedRotatingFileHandler',
-#             'filename': os.path.join(BASE_DIR, '../data/logs/touchpoint-mqtt-'),
-#             'postfix': '.txt',
-#             'when': 'midnight',
-#             'interval': 1,
-#             'backupCount': 0,
-#             # 'formatter': 'standard',
-#         },
-#         'mail_admins': {
-#             'level': 'ERROR',
-#             'class': 'django.utils.log.AdminEmailHandler',
-#             'include_html': True,
-#         }
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['console'],
-#             'propagate': True,
-#             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-#         },
-#         'touchpoint.mqtt_log': {
-#             'handlers': ['mqtt_file'],
-#             'propagate': True,
-#             'level': 'INFO',
-#         },
-#         'touchpoint.email_log': {
-#             'handlers': ['mail_admins'],
-#             'propagate': True,
-#             'level': 'INFO',
-#         },
-#     },
-# }
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -244,5 +204,87 @@ CACHES = {
         }
     }
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = (
+#     'google.com',
+#     'hostname.example.com'
+# )
+
+MAIL_SENDER = 'AMAZON'
+AWS_REGION_NAME = os.environ["AWS_DEFAULT_REGION"]
+AWS_ACCESS_KEY_ID = AWS_SES_ACCESS_KEY_ID = os.environ["AWS_NGIP_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = AWS_SES_SECRET_ACCESS_KEY = os.environ["AWS_NGIP_SECRET_ACCESS_KEY"]
+boto3_session = Session(aws_access_key_id=AWS_ACCESS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                        region_name=AWS_REGION_NAME)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    # 'root': {
+    #     'level': logging.INFO,
+    #     'handlers': ['console'],
+    # },
+    'formatters': {
+        'simple': {
+            'format': u"%(asctime)s [%(levelname)-8s-%(module)s] %(message)s",
+            'datefmt': "%Y-%m-%d %H:%M:%S"
+        },
+        'aws': {
+            'format': u"[%(levelname)-8s] %(module)s %(message)s",
+            'datefmt': "%Y-%m-%d %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'cwlog-general': {
+            'level': 'INFO',
+            'class': 'watchtower.CloudWatchLogHandler',
+            'boto3_session': boto3_session,
+            'log_group': f'ngip-{ENVIRONMENT}-middleware',
+            'stream_name': 'general',
+            'formatter': 'aws',
+        },
+        'cwlog-tasks': {
+            'level': 'INFO',
+            'class': 'watchtower.CloudWatchLogHandler',
+            'boto3_session': boto3_session,
+            'log_group': f'ngip-{ENVIRONMENT}-middleware',
+            'stream_name': 'tasks',
+            'formatter': 'aws',
+        },
+        'cwlog-error': {
+            'level': 'INFO',
+            'class': 'watchtower.CloudWatchLogHandler',
+            'boto3_session': boto3_session,
+            'log_group': f'ngip-{ENVIRONMENT}-middleware',
+            'stream_name': 'error',
+            'formatter': 'aws',
+        },
+    },
+    'loggers': {
+        'django': {
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'handlers': ['console', 'cwlog-general'],
+            'propagate': True,
+        },
+        'tasks': {
+            'level': 'INFO',
+            'handlers': ['console', 'cwlog-general', 'cwlog-tasks'],
+            'propagate': True,
+        },
+        'ngip.error': {
+            'level': 'ERROR',
+            'handlers': ['console', 'cwlog-general', 'cwlog-error'],
+            'propagate': False,
+        },
+        # add your other loggers here...
+    },
+}
+
 
 ADMINS = [(os.environ["ADMIN_NAME"], os.environ["ADMIN_EMAIL"])]

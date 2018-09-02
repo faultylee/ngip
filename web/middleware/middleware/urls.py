@@ -6,11 +6,17 @@ from django.contrib import admin
 from rest_framework import routers
 from ngip import views
 
+# TODO: re-investigate to use https://github.com/alanjds/drf-nested-routers
+# ref: https://github.com/Nifled/drf-cheat-sheet
+
 router = routers.DefaultRouter()
+router.register(r'account', views.AccountViewSet)
 router.register(r'ping', views.PingViewSet)
-router.register(r'ping/token', views.PingTokenViewSet)
+router.register(r'token', views.PingTokenViewSet)
+router.register(r'user', views.UserViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r"^admin/", admin.site.urls)
+    url(r"^admin/", admin.site.urls),
+    url(r'^admin/django-ses/', include('django_ses.urls'))
 ]

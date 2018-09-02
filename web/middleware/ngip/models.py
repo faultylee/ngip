@@ -1,10 +1,12 @@
 from django.contrib.auth.models import User, AbstractUser
 from django.db import models
 import django_extensions.db.models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 from django.core.mail import send_mail
-
-from middleware import settings
-
+from django_redis import get_redis_connection
+import middleware
+import ngip.tasks
 
 class STATUS:
     ACTIVE = "a"
@@ -46,7 +48,6 @@ class PING_INT_VALUE_COMPARE:
         (LESS_THAN_OR_EQUAL, "<="),
     )
 
-
 class AuditModel(models.Model):
     """ AuditModel
     An abstract base class model that provides self-managed "created", "created_by", "modified" and "modified_by"
@@ -54,7 +55,7 @@ class AuditModel(models.Model):
     """
 
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        middleware.settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         related_name="+",
@@ -63,7 +64,7 @@ class AuditModel(models.Model):
     )
     date_created = django_extensions.db.models.CreationDateTimeField("Created On")
     modified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        middleware.settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         related_name="+",
@@ -109,17 +110,31 @@ class UserLoginToken(models.Model):
 
 
 class Ping(models.Model):
-    account = models.ForeignKey(Account, null=True)
+    account = models.ForeignKey(Account, null=True, related_name='accountpings')
     name = models.CharField(max_length=255)
-    date_received = models.DateTimeField("Last Received", blank=True, null=True)
+    date_last_received = models.DateTimeField("Last Received", blank=True, null=True)
     status = models.CharField(max_length=1, choices=STATUS.FLAGS)
     notified = models.BooleanField(default=False)
 
 
 class PingToken(AuditModel):
-    ping = models.ForeignKey(Ping)
+    ping = models.ForeignKey(Ping, related_name='pingtokens')
     token = models.CharField(max_length=255)
     date_last_used = models.DateTimeField("Last Used", blank=True, null=True)
+    previousToken = None
+
+    def __init__(self, *args, **kwargs):
+        super(PingToken, self).__init__(*args, **kwargs)
+        self.previousToken = self.token
+
+    def save(self, **kwargs):
+        super(PingToken, self).save(**kwargs)
+        ngip.tasks.addOrUpdatePingTokens.apply((self.pk, self.token, self.previousToken), countdown=0)
+        self.previousToken = self.token
+
+    def delete(self, **kwargs):
+        super(PingToken, self).delete(**kwargs)
+        ngip.tasks.deletePingTokens.apply((self.token, ), countdown=0)
 
     def __str__(self):
         return f"{self.ping}, Token: {self.token}, Last Used: {self.date_last_used}"
@@ -145,6 +160,6 @@ class PingStringValue(models.Model):
         return f"{self.ping}, Key: {self.key}, Value: {dict(PING_STRING_VALUE_COMPARE.FLAGS).get(self.compare)} {self.value}"
 
 
-class PingHistory(models.Model):
-    ping = models.ForeignKey(Ping, on_delete=models.CASCADE)
+class PingTokenHistory(models.Model):
+    token = models.ForeignKey(PingToken, on_delete=models.CASCADE, related_name='pingtokenhistories')
     date_received = models.DateTimeField("Received On")

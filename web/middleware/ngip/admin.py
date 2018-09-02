@@ -2,11 +2,13 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
 from ngip import models
+from django_ses.views import dashboard
 
 
 # class AccountPublicUserInline(admin.TabularInline):
 #     model = models.User
 
+#admin.site.register_view('django-ses', dashboard, 'Django SES Stats')
 
 @admin.register(models.User)
 class PublicUser(UserAdmin):
@@ -67,7 +69,7 @@ class PingStringValueInline(admin.TabularInline):
 @admin.register(models.Ping)
 class Ping(ModelAdmin):
 
-    list_display = ["account", "name", "date_received", "status", "notified"]
+    list_display = ["account", "name", "date_last_received", "status", "notified"]
 
     fields = ["account", "name", "status"]
 

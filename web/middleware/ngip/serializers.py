@@ -1,18 +1,31 @@
-from ngip.models import Ping, PingToken
+from ngip.models import *
 from rest_framework import serializers
+
+
+class PingTokenSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = PingToken
+        fields = ('pk', 'ping', 'token', 'date_last_used')
 
 
 class PingSerializer(serializers.HyperlinkedModelSerializer):
 
-    account = serializers.StringRelatedField()
-    tokens = serializers.StringRelatedField()
-
     class Meta:
         model = Ping
-        fields = ('account', 'name', 'date_received', 'status', 'notified', 'tokens')
+        fields = ('pk', 'account', 'name', 'date_last_received', 'status', 'notified', 'pingtokens')
 
 
-class PingTokenSerializer(serializers.HyperlinkedModelSerializer):
+class AccountSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
-        model = PingToken
-        fields = ('ping', 'token', 'date_last_used')
+        model = Account
+        fields = ('pk', 'name', 'accountpings')
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('pk', 'email', 'date_joined')
+
