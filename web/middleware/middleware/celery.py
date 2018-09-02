@@ -88,11 +88,12 @@ from middleware.settings import LOGGING
 
 
 def initializeCeleryLog(logger=None, **kwargs):
-    handler = CloudWatchLogHandler(
-        log_group=LOGGING['handlers']['cwlog-tasks']['log_group'],
-        stream_name=LOGGING['handlers']['cwlog-tasks']['stream_name'],
-        boto3_session=LOGGING['handlers']['cwlog-tasks']['boto3_session'],
-    )
+    if 'handler' in LOGGING and 'cwlog-tasks' in LOGGING['handlers']:
+        handler = CloudWatchLogHandler(
+            log_group=LOGGING['handlers']['cwlog-tasks']['log_group'],
+            stream_name=LOGGING['handlers']['cwlog-tasks']['stream_name'],
+            boto3_session=LOGGING['handlers']['cwlog-tasks']['boto3_session'],
+        )
     handler.setLevel(LOGGING['handlers']['cwlog-tasks']['level'])
     # Can't get forammter working properly, getting:
     #   Unrecoverable error: AttributeError("'Formatter' object has no attribute 'level'",)

@@ -27,7 +27,7 @@ pipeline {
                         usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'),
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
-                        string(credentialsId: 'DJANGO_SECRET_KEY', variable: 'SECRET_KEY'),
+                        string(credentialsId: 'DJANGO_SECRET_KEY', variable: 'DJANGO_SECRET_KEY'),
                         string(credentialsId: 'AWS_NGIP_ACCESS_KEY_ID', variable: 'AWS_NGIP_ACCESS_KEY_ID'),
                         string(credentialsId: 'AWS_NGIP_SECRET_ACCESS_KEY', variable: 'AWS_NGIP_SECRET_ACCESS_KEY'),
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
@@ -48,7 +48,7 @@ pipeline {
                         echo "ADMIN_NAME=$ADMIN_NAME" >> .env
                         echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
                         echo "AWS_DEFAULT_REGION=ap-southeast-1" >> .env
-                        echo "AWS_NGIP_ACCESS_KEY_ID=$AWS_NGIP_SECRET_ACCESS_KEY" >> .env
+                        echo "AWS_NGIP_ACCESS_KEY_ID=$AWS_NGIP_ACCESS_KEY_ID" >> .env
                         echo "AWS_NGIP_SECRET_ACCESS_KEY=$AWS_NGIP_SECRET_ACCESS_KEY" >> .env
                     '''
                 }
@@ -68,7 +68,7 @@ pipeline {
                     docker tag ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' ngip/ngip-middleware-web:latest
 
                     # build middleware static file
-                    docker run --rm -w /app -v $(pwd):/app --env-file .env ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input
+                    docker run --rm -w /app -v $(pwd):/app --env-file .env ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input --settings middleware.dummy_settings
 
                     # build fake_lambda/ping docker
                     cd ../ping
