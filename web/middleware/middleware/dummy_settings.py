@@ -153,17 +153,6 @@ if 'ENVIRONMENT' in os.environ:
     PRODUCTION = os.environ['ENVIRONMENT'].lower() == 'prod'
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.environ['POSTGRES_HOST'],
-        'PORT': os.environ['POSTGRES_PORT'],
-        'NAME': os.environ['POSTGRES_DB'],
-        'USER': os.environ['POSTGRES_USER'],
-        'PASSWORD': os.environ['POSTGRES_PASSWORD']
-    }
-}
-
 if ENVIRONMENT == 'local':
     # SECURITY WARNING: don't run with debug turned on in production!
     DEBUG = True
@@ -181,32 +170,3 @@ else:
     STATICFILES_DIRS = ((os.path.join(BASE_DIR, 'static')),)
     STATIC_ROOT = '/code/data/static'
 
-CELERY_BROKER_URL = f'redis://{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}/0'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_RESULT_EXPIRES = timedelta(days=14)
-CELERY_MONITOR_TASK_SUCCESS_EXPIRES = timedelta(days=14)
-CELERY_MONITOR_TASK_ERROR_EXPIRES = timedelta(days=14)
-CELERY_MONITOR_TASK_PENDING_EXPIRES = timedelta(days=14)
-
-# TODO: CELERY_ALWAYS_EAGER - set during unittest
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": CELERY_BROKER_URL,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
-CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ORIGIN_WHITELIST = (
-#     'google.com',
-#     'hostname.example.com'
-# )
