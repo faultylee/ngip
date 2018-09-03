@@ -7,7 +7,7 @@ To demonstrate my understanding of end-to-end cloud based application and abilit
 As a playground for me to learn new technology and explore different approaches to existing IT problems.
 
 ## Executive Summary
-At the current stage of this project, I've made use of various DevOps toolset and able to deploy a cloud application build on top of Django, Celery and Vue.js to AWS infrasturture. Although this is my first time deploying an application which utilizes Jenkins, Terraform, Chef, EC2, ECS, Lambda, ELB, Redis, RDS all at the same time, the prior experience from on premise application architecture does help reduce my learning time. Most enterprise best practises still applies on a typical cloud application. The main take away is the need to understand the paradigm shift from going cloud and how to take advantage of DevOps to increase quality and efficiency.
+At the current stage of this project, I've made use of various DevOps toolset and able to deploy a cloud application build on top of Django, Celery and Vue.js to AWS infrasturture. Although this is my first time deploying an application which utilizes Jenkins, Terraform, Chef, EC2, ECS, Lambda, ELB, Redis, RDS all at the same time, the prior experience from on premise application architecture does help reduce my learning time. Most enterprise best practises still applies on a typical cloud application. 
  
 ## Detail
 
@@ -33,7 +33,7 @@ Below are detail on how I utilized each components:
 
 Throughout this project, I've learn a lot about AWS Intrastructure, Jenkins and infrastucture provisioning using Terraform. Both Jenkins and Terraform are new to me but I could say now I can use them comfortably. 
 
-Below are the area I still can't grasp them fully. I'll require trial and error to get things right. I'll need to spend more time to gain a deeper understanding before I can use them effectively.
+Below are the area I yet to grasp them fully. I'll require trial and error to get things right. I'll need to spend more time to gain a deeper understanding before I can use them effectively.
 
 - Chef
 - API Gateway
@@ -51,12 +51,14 @@ Below are the list of components which I've not priorotize to provision via code
 - Jenkins
 - CloudWatch & Extensive Logging
  
-The Jenkins pipeline is only working up to Staging. Terrafrom code for production is working and tested without application deployment step. I'm still working out how to deploy to production properly. I also plan to learn and do blue/green deployment to production automatically.  
+The Jenkins pipeline is only working up to Staging . Terrafrom code for production is working and tested without application deployment step. I'm still working out how to deploy to production properly. I also plan to learn and do blue/green deployment to production automatically.  
 
-
-## Conlusion
 Based on my calculation, up until today, I've spent about 150 hours on building **ngip** from scratch.
 If I'm tasked to build a similar project from scratch, I expect to take between 75 to 100 hours to reach the current state.   
+
+## Conlusion
+The main take away from this project is the need to understand the paradigm shift from going cloud and how to take advantage of DevOps to increase quality and efficiency. With the increasing pace of technology progression, we need to work smarter and not harder to keep up. 
+
 
 
 ## Appendix

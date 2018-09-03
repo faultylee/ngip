@@ -9,6 +9,7 @@ from django_redis import get_redis_connection
 from celery_once import QueueOnce
 
 import middleware
+import time
 
 @middleware.celery_app.task(base=QueueOnce, once={'timeout': 60})
 def populatePingTokens():
@@ -25,6 +26,7 @@ def populatePingTokens():
 
     return f"Ping Token Added: {newCount}, Updated: {updateCount}, Deleted: {deleteCount}"
 
+
 @middleware.celery_app.task()
 def addOrUpdatePingTokens(pk, token, previousToken):
     r = get_redis_connection("default")
@@ -35,6 +37,7 @@ def addOrUpdatePingTokens(pk, token, previousToken):
 
     return f"Ping Token Updated: {previousToken} => {pingToken.token}"
 
+
 @middleware.celery_app.task()
 def deletePingTokens(token):
     r = get_redis_connection("default")
@@ -42,5 +45,22 @@ def deletePingTokens(token):
     r.delete(f"pingToken_{token}")
 
     return f"Ping Token Delete: {pingToken.token}"
+
+@middleware.celery_app.task()
+def processPingTokens():
+    r = get_redis_connection("default")
+    i = 0
+    for i in range(0, 100):
+        data = r.lpop(f"pingQueue")
+        if data:
+            token = ngip.models.PingToken.filter(token=data['ping_token'])
+            ngip.models.PingTokenHistory.create(
+                token = token,
+                date_received = time.gmtime(data['ping_token'])
+            )
+        else:
+            break;
+
+    return f"Ping Token Processed : {i}"
 
 

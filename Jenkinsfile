@@ -78,7 +78,7 @@ pipeline {
                     # docker run --rm -w /app -v $(pwd):/app --env-file .env ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' python manage.py collectstatic --no-input --settings middleware.dummy_settings
 
                     # build fake_lambda/ping docker
-                    cd ../ping
+                    cd ping
                     docker build -t ngip/ngip-middleware-ping:''' + GIT_SHA_PRETTY  + ''' .
                     docker tag ngip/ngip-middleware-ping:''' + GIT_SHA_PRETTY + ''' ngip/ngip-middleware-ping:latest
 
@@ -148,7 +148,7 @@ pipeline {
                      '''
                     echo "Upload Lambda Function"
                     sh '''
-                         eval "${AWS_CMD} aws s3 cp web/ping/dist/lambda-function-''' + GIT_SHA_PRETTY + '''.zip s3://ngip-private/ngip-ping"                         
+                         eval "${AWS_CMD} aws s3 cp web/ping/dist/lambda-function-''' + GIT_SHA_PRETTY + '''.zip s3://ngip-private/ngip-ping/lambda-function-''' + GIT_SHA_PRETTY + '''.zip"                         
                      '''
                 }
             }

@@ -31,8 +31,9 @@ def handler(event, context):
             if ping_token:
                 if r.get(f"pingToken_{ping_token}"):
                     timestamp = int(time.time())
-                    r.publish(f"ping_queue", {"timestamp": timestamp, "ping_token": ping_token})
-                    #r.set(ping_token, timestamp)
+                    r.rpush("pingQueue", {"timestamp": timestamp, "ping_token": ping_token})
+                    # r.publish(f"ping_queue", {"timestamp": timestamp, "ping_token": ping_token})
+                    # r.set(ping_token, timestamp)
                     response = {
                         "statusCode": 200,
                         'headers': {'Content-Type': 'application/json'},

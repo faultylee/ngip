@@ -163,8 +163,9 @@ resource "null_resource" remote-exec-chef-cookbooks {
       "cd ~/cookbooks",
       "sudo chef-solo -c solo.rb -o test::default",
       "sudo $(sudo docker run --rm -i -e AWS_DEFAULT_REGION=ap-southeast-1 faultylee/aws-cli-docker:latest aws ecr get-login --no-include-email)",
-      "sudo docker pull 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:${var.git_sha_pretty}"
-      //"sudo docker run --rm -it -e POSTGRES_HOST=stage-ngip-db.cjdsty76imhp.ap-southeast-1.rds.amazonaws.com -e POSTGRES_PORT=5432 -e POSTGRES_DB=ngip -e POSTGRES_USER=ngip_user -e POSTGRES_PASSWORD=ngip_user -e REDIS_PASSWORD=redisPassword123 -e REDIS_HOST=ngip-local-rep-1-001.ngip-local-rep-1.cuyq10.apse1.cache.amazonaws.com -e REDIS_PORT=6379 -e MQTT_HOST=localhost -e MQTT_PORT=1883 -e ADMIN_NAME=faulty -e ADMIN_EMAIL=faulty.lee@gmail.com -p 8000:8000 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:9477153 python manage.py runserver 0.0.0.0:8000"
+      "sudo docker pull 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:${var.git_sha_pretty}",
+      "sudo docker run --restart always -d -e POSTGRES_HOST=${var.POSTGRES_HOST} -e POSTGRES_PORT=5432 -e POSTGRES_DB=ngip -e POSTGRES_USER=ngip_user -e POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD} -e REDIS_PASSWORD='' -e REDIS_HOST=${var.REDIS_HOST} -e REDIS_PORT=6379 ADMIN_NAME=${var.ADMIN_NAME} -e ADMIN_EMAIL=${var.ADMIN_EMAIL} 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:${var.git_sha_pretty} ./docker-entrypoint-celery-beat.sh",
+      "sudo docker run --restart always -d -e POSTGRES_HOST=${var.POSTGRES_HOST} -e POSTGRES_PORT=5432 -e POSTGRES_DB=ngip -e POSTGRES_USER=ngip_user -e POSTGRES_PASSWORD=${var.POSTGRES_PASSWORD} -e REDIS_PASSWORD='' -e REDIS_HOST=${var.REDIS_HOST} -e REDIS_PORT=6379 ADMIN_NAME=${var.ADMIN_NAME} -e ADMIN_EMAIL=${var.ADMIN_EMAIL} 288211158144.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:${var.git_sha_pretty} sh -c 'rm -f celeryev.pid && celery -A middleware events --camera django_celery_monitor.camera.Camera --frequency=2.0 --loglevel=info'"
     ]
   }
 }
