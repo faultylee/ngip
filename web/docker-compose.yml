@@ -78,6 +78,8 @@ services:
     - middleware/.env
     depends_on:
     - redis
+    volumes:
+    - ./ping/dist:/app/dist
     command: sh -c 'gunicorn -w 2 -b 0.0.0.0:5000 fake_lambda:app'
     ports:
     - "5000:5000"

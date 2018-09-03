@@ -22,6 +22,7 @@ RUN pip install -r requirements.txt
 COPY ./redis /app/redis/
 COPY fake_lambda.py /app/fake_lambda.py
 COPY service.py /app/service.py
+COPY config.yaml /app/config.yaml
 
 ENV FLASK_APP fake_lambda.py
 

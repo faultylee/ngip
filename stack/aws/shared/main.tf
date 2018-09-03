@@ -135,6 +135,24 @@ resource "aws_route" "peer_from_ngip_to_jenkins" {
 # ELB
 ########################
 
+resource "aws_security_group" "ngip-elb-all" {
+  name        = "${local.name_prefix}-elb-all"
+  description = "Security group for ngip-db"
+  vpc_id      = "${aws_vpc.ngip-vpc.id}"
+
+  tags {
+    Name          = "${local.name_prefix}"
+    Environment   = "${local.name_prefix}"
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_lb_target_group" "ngip-web" {
   name     = "${local.name_prefix}"
   port     = 80
@@ -145,7 +163,7 @@ resource "aws_lb_target_group" "ngip-web" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 3
-    path                = "/"
+    path                = "/api/"
     port                = 8000
     interval            = 10
   }
@@ -158,6 +176,8 @@ resource "aws_lb" "ngip-elb" {
 
   enable_cross_zone_load_balancing = true
   subnets = ["${aws_subnet.ngip-subnet-pub.*.id}"]
+
+  security_groups = ["${aws_security_group.ngip-elb-all.id}"]
 
   tags {
     Name          = "${local.name_prefix}"

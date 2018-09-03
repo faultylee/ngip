@@ -63,9 +63,15 @@ pipeline {
 
                     # build middleware docker
                     cd middleware
-                        #
                     docker build -t ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' .
                     docker tag ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + ''' ngip/ngip-middleware-web:latest
+                    cd ..
+
+                    # build lambda package
+                    docker-compose build ping
+                    docker-compose run --rm ping lambda build
+                    sudo chown -R tomcat:tomcat ping/dist
+                    mv ping/dist/*.zip ping/dist/lambda-function-''' + GIT_SHA_PRETTY + '''.zip
 
                     # build middleware static file
                     # dummy settings did't work, celery still compaint of missing broker url 
@@ -118,7 +124,7 @@ pipeline {
                 }
             }
         }
-        stage('Push to ECR') {
+        stage('Push to ECR & Upload to files S3') {
             steps {
                 withCredentials([
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
@@ -131,6 +137,18 @@ pipeline {
                         eval "${AWS_CMD} aws ecr get-login --no-include-email" | tr '\\r' ' ' | bash 
                         docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:latest
                         docker push ${AWS_REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/ngip/ngip-middleware-web:''' + GIT_SHA_PRETTY + '''
+                     '''
+                    echo "Upload static pages"
+                    sh '''
+                        cd web/frontend/dist
+                         eval "${AWS_CMD} aws s3 cp app.js s3://stage.ngip.io --acl public-read"
+                         eval "${AWS_CMD} aws s3 cp error.html s3://stage.ngip.io --acl public-read"
+                         eval "${AWS_CMD} aws s3 cp favicon.ico s3://stage.ngip.io --acl public-read"
+                         eval "${AWS_CMD} aws s3 cp index.html s3://stage.ngip.io --acl public-read"                         
+                     '''
+                    echo "Upload Lambda Function"
+                    sh '''
+                         eval "${AWS_CMD} aws s3 cp web/ping/dist/lambda-function-''' + GIT_SHA_PRETTY + '''.zip s3://ngip-private/ngip-ping"                         
                      '''
                 }
             }
