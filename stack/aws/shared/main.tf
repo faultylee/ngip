@@ -47,6 +47,7 @@ variable "pg_backup_window" {}
 variable "pg_backup_retention_period" {}
 variable "pg_monitoring_interval" {}
 variable "elb_https_certificate" {}
+variable "route53_primary_zone_id" {}
 
 resource "aws_vpc" "ngip-vpc" {
   cidr_block           = "${var.vpc_cidr}"
@@ -134,16 +135,6 @@ resource "aws_route" "peer_from_ngip_to_jenkins" {
 # ELB
 ########################
 
-resource "aws_eip" "ngip-eip" {
-  vpc = true
-
-  depends_on                = ["aws_internet_gateway.ngip-vpc"]
-  tags {
-    Name        = "${local.name_prefix}"
-    Environment = "${local.name_prefix}"
-  }
-}
-
 resource "aws_lb_target_group" "ngip-web" {
   name     = "${local.name_prefix}"
   port     = 80
@@ -202,6 +193,17 @@ resource "aws_lb_listener" "ngip-web-http" {
   }
 }
 
+resource "aws_route53_record" "ngip-web-elb" {
+  zone_id = "${var.route53_primary_zone_id}"
+  name    = "${local.is_prod? "": "${local.environment}-"}app.ngip.io"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_lb.ngip-elb.dns_name}"
+    zone_id                = "${aws_lb.ngip-elb.zone_id}"
+    evaluate_target_health = true
+  }
+}
 
 ########################
 # RDS - Postgres
@@ -403,8 +405,6 @@ resource "aws_iam_instance_profile" "ngip-ecr-readonly-profile" {
 }
 
 output "ngip-vpc-id" { value = "${aws_vpc.ngip-vpc.id}" }
-output "ngip-eip" { value = "${aws_eip.ngip-eip.id}" }
-output "ngip-public-ip" { value = "${aws_eip.ngip-eip.public_ip}" }
 output "ngip-db-address" { value = "${aws_db_instance.ngip-db.0.address}" }
 output "ngip-redis-address" { value = "${aws_elasticache_replication_group.ngip-redis.primary_endpoint_address}" }
 output "ngip-subnet-pub-id" { value = "${aws_subnet.ngip-subnet-pub.*.id}" }
