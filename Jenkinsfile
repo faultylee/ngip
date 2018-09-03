@@ -103,7 +103,7 @@ pipeline {
                         cd web
                         docker-compose rm -fs
                         docker-compose up -d
-                        sleep 10
+                        sleep 15
                         
                         if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/api/ping/1 | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
                             exit 127
@@ -124,7 +124,7 @@ pipeline {
                 }
             }
         }
-        stage('Push to ECR & Upload to files S3') {
+        stage('Push to ECR & Upload files to S3') {
             steps {
                 withCredentials([
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
