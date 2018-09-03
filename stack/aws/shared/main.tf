@@ -146,7 +146,7 @@ resource "aws_lb_target_group" "ngip-web" {
     unhealthy_threshold = 2
     timeout             = 3
     path                = "/"
-    port                = 80
+    port                = 8000
     interval            = 10
   }
 }
