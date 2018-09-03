@@ -51,30 +51,6 @@ data "aws_s3_bucket_object" "key_file" {
 }
 
 ########################
-# ELB
-########################
-
-//resource "aws_elb" "this" {
-//  name            = "${local.name_prefix}"
-//  subnets         = ["${var.public_subnet_cidrs}"]
-//  internal        = false
-//  security_groups = ["${var.security_groups}"]
-//
-//  cross_zone_load_balancing   = true
-//  idle_timeout                = "${var.idle_timeout}"
-//  connection_draining         = "${var.connection_draining}"
-//  connection_draining_timeout = "${var.connection_draining_timeout}"
-//
-//  listener     = ["${var.listener}"]
-//  access_logs  = ["${var.access_logs}"]
-//  health_check = ["${var.health_check}"]
-//
-//  lifecycle { create_before_destroy = "${local.is_prod ? true : false}" }
-//
-//  tags = "${merge(var.tags, map("Name", format("%s", var.name)))}"
-//}
-
-########################
 # EC2 Web
 ########################
 
@@ -90,8 +66,22 @@ resource "aws_security_group" "ngip-web" {
   }
 
   ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port   = 8000
     to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
