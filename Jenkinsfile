@@ -138,8 +138,12 @@ pipeline {
         stage('Setup Stage Stack') {
             steps {
                 withCredentials([
+                        usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'),
                         string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(credentialsId: 'DJANGO_SECRET_KEY', variable: 'DJANGO_SECRET_KEY'),
+                        string(credentialsId: 'AWS_NGIP_ACCESS_KEY_ID', variable: 'AWS_NGIP_ACCESS_KEY_ID'),
+                        string(credentialsId: 'AWS_NGIP_SECRET_ACCESS_KEY', variable: 'AWS_NGIP_SECRET_ACCESS_KEY'),
                         usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
                 ]) {
                     echo "Bring up shared stack"
@@ -177,7 +181,13 @@ pipeline {
                         rm local.tf
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
-                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}' -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
+                        eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' \
+                            -var 'SECRET_KEY=${DJANGO_SECRET_KEY}' \
+                            -var 'ADMIN_EMAIL=${ADMIN_EMAIL}' -var 'ADMIN_NAME=${ADMIN_NAME}' \
+                            -var 'AWS_NGIP_ACCESS_KEY_ID=${AWS_NGIP_ACCESS_KEY_ID}' -var 'AWS_NGIP_SECRET_ACCESS_KEY=${AWS_NGIP_SECRET_ACCESS_KEY}' \
+                            -var 'POSTGRES_USER=${POSTGRES_USER}' -var 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}' \
+                            -var 'POSTGRES_HOST=''' + DB_ADDRESS + '''' -var 'REDIS_HOST=''' + REDIS_ADDRESS + '''' \
+                            -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
                         MIDDLEWARE=$(eval "${TERRAFORM_CMD} output -json")
                         echo "$MIDDLEWARE" | jq -r '.ngip_web_public_ip.value[]' > ngip_web_public_ip 
                      '''
