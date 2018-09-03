@@ -33,7 +33,7 @@ Below are detail on how I utilized each component:
 
 Throughout this project, I've learn a lot about AWS Infrastructure, Jenkins and infrastructure provisioning using Terraform. Both Jenkins and Terraform are new to me but I could say now I can use them comfortably. 
 
-Below are the area I yet to grasp them fully. I'll require trial and error to get things right. I'll need to spend more time to gain a deeper understanding before I can use them effectively.
+Below are the area I've yet to grasp them fully. I'll require trial and error to get things right. I'll need to spend more time to gain a deeper understanding before I can use them effectively.
 
 - Chef
 - API Gateway
@@ -53,6 +53,8 @@ Below are the list of components which I've not prioritized to provision via cod
 - CloudWatch & Extensive Logging
  
 The Jenkins pipeline is only working up to Staging. Terrafrom code for production is working and tested without application deployment step. I'm still working out how to deploy to production properly. I also plan to learn and do blue/green deployment to production automatically.  
+
+The application itself still need more work, such as authentication, unit testing and logging. I'll continue working on this at my free time.
 
 Based on my calculation, up until today, I've spent about 150 hours on building **ngip** from scratch.
 If I'm tasked to build a similar project again, I expect to take between 75 and 100 hours to reach the current state. Possibly shorter after a few iterations.  
