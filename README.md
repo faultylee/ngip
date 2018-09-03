@@ -31,6 +31,9 @@ LastBuildLog:
 - https://s3-ap-southeast-1.amazonaws.com/ngip-build-output/build.log
 
 ## Changelog
+#### 2018-09-03
+- Submit for review
+  - Infra and application diagram reflecting actual working setup
 #### 2018-07-15
 - Updated
   - Added private subnet in infra diagram
@@ -62,19 +65,23 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 
 | Technology             | Purpose                                                                                                 | Reason                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| AWS EC2                | Running Django REST and Celery workers                                                                  | As per requirement                                                                 |
-| AWS Lambda             | Ping endpoint                                                                                           | scale-able and cost effective                                                      |
-| AWS ELB                | Load balance incoming request and SSL termination. Need to figure out how to scale EC2 as load goes up. | As per requirement, to utilize auto scaling                                        |
-| AWS CloudFront         | CDN for S3 and SSL Termination                                                                                | scale-able and cost effective                                                      |
-| AWS S3                 | SPA static website                                                                                      | scale-able and cost effective                                                      |
-| AWS Redis              | Application in memory caching, broker for Celery                                                        | Prior experience                                                                   |
-| AWS SQS                | Message queue for async tasks, using queue length to judge scaling behavior or overall health           | Prior experiences in using MQTT to scale async tasks                                |
+| AWS API Gateway        | Public facing endpoints for Lambda                                                                      | AWS' requirement to expose Lambda to public                                        |
+| AWS Lambda             | Ping endpoint                                                                                           | scale-able and cost effective solution for ping endpoint                           |
+| AWS ECR                | Storage for Django & Ping docker images                                                                 | Reduce traffic cost and avoid direct file transfer                                 |
+| AWS ECS                | Running Django REST and Celery workers                                                                  | Ease local and cloud deployment                                                    |
+| AWS ELB                | Load balance incoming REST request and SSL termination.                                                 | Connection point to Auto Scaling Group                                             |
+| AWS ASG                | Self managed scaling of Django & Celery workers containers                                              | Scale automatically based on load                                                  |
+| AWS CloudFront         | CDN, Edge Optimized API Endpoint                                                                        | Reduce traffic cost                                                                |
+| AWS S3                 | SPA static website, private store for Lambda package & Terraform states                                 | Ease of use                                                                        |
+| AWS Redis              | Application in memory caching, broker for Celery, Queue for pings from Lambda to Worker                 | Able to fullfil the needs for KeyValue store and Queue                             |
 | AWS SES                | Sending email alert and notification                                                                    | Avoid reinventing the wheel, one less component to maintain                        |
-| AWS RDS for PostgreSQL | Persistent storage                                                                                      | Prior experience                                                                   |
-| AWS Route53            | DNS management                                                                                          | Possible future multi-region failover                                              |
-| AWS ECS or Docker      | Possibly to host Celery workers                                                                         | As per requirement                                                                 |
-| AWS Opsworks Chef      | Overall solution orchestration                                                                          | Currently learning and would like to gain experience in                            |
-| Jenkins                | CI/CD                                                                                                      | As per requirement, similar to Gitlab CI which I have experience with              |
+| AWS RDS for PostgreSQL | Main Persistent storage                                                                                 | Works well with Django                                                             |
+| AWS Route53            | DNS management                                                                                          | Tightly integrated with S3 & CDN, ease of configuration                            |
+| AWS CloudWatch         | Collect and analyze logs & metrics                                                                      | Built in to AWS services                                                           |
+| Chef Solo              | Instance preparation                                                                                    | Avoid having to run another server                                                 |
+| Jenkins                | CI/CD                                                                                                   | Very powerful CI/CD server and tons of plugins                                     |
+| Terraform              | Infrastructure Provisioning                                                                             | Easy to use, a lot of example online                                               |
+| Travis-CI              | CI/CD                                                                                                   | Free hosted CI, to bring up Jenkins server only when needed to save cost           |
 
 ### Application
 
@@ -82,10 +89,9 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
 
 | Technology             | Purpose                                                                                                 | Reason                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Vue.js                 | Front-end client-side web framework                                                                     | A web framework in my to-learn list. Small, easier to learn, and good performance. |
+| Vue.js                 | Front-end client-side web framework                                                                     | Easy to use and powerful                                                           |
 | Django                 | Back-end framework                                                                                      | Prior experience, fast delivery                                                    |
-| Celery                 | Async tasks and background worker                                                                       | Prior experience                                                                   |
-| ELK                    | Collect and analyze logs                                                                                | A technology stack in my to-learn list, especially useful for SIEM in InfoSec      |
+| Celery                 | Async tasks and background worker                                                                       | Prior experience, flexible                                                         |
 
 #### Front-end
 - 3 SPA pages using Vue.js
@@ -121,11 +127,13 @@ AWS, this is part of the requirement. It does fit my design of doing a SPA hosti
   - CI Logs
 
 #### CI Pipeline
-- Build
-- Test
-- Deploy to testing environment
-- Load test
-- Prompt to deploy to production
+- Middleware Build & Test
+- Middleware Docker Test
+- Push to ECR
+- Setup Stage Stack
+- Stage Stack App Test
+- Setup Prod Stack
+- Post Build Clean Up
 
 #### Load Testing
 I plan to have a separate setup for load testing, which provision a handful of EC2 instances to generate ping traffics and API call, then monitor the key metrics on the application and gauge how well the auto scaling is performing. 
@@ -135,12 +143,12 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 
 - [x] Setup basic working CI using Jenkins CI
 - [x] Setup CloudFront for S3
-- [ ] Build Django + Celery working skeleton
-- [ ] Setup CI to create EC2 instances and deploy app
+- [x] Build Django + Celery working skeleton
+- [x] Setup CI to create EC2 instances and deploy app
 - [ ] Email based signin token
-- [ ] Using Django as front-end to add/modify/remove checks
+- [x] Using Django as CRUD Rest Endpoint
 - [ ] Sync function for updating of last ping time
-- [ ] Move updating of last ping time into Celery tasks
+- [x] Move updating of last ping time into Celery tasks
 - [ ] Isolate Celery workers into its own EC2, probably start involving Chef here
 - [ ] Add more Celery tasks
   - [ ] Monitoring lapse ping 
@@ -151,7 +159,7 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 - [ ] Write a script for load testing, and deploy using Chef for CI test job
 - [ ] Use AWS to monitor for Django and Celery app load to scale automatically
 - [ ] Tweak Chef recipe to allow complete setup from scratch
-- [ ] Create SPA pages (if time permits)
+- [x] Create SPA pages (if time permits)
   - [ ] User Dashboard
   - [ ] Admin Dashboard
 
@@ -159,18 +167,17 @@ Below is a crude project plan outlining the tasks that will be performed, in ord
 
 
 ## Usage
-*NO
-TE: This project is still in design stage*
+*NOTE: This project is still in design stage*
 
 Basic:
 ```
-$ curl ngip.io/<your unique check token>
+$ curl api.ngip.io/ping/<your unique check token>
 OK
 ```
 
 With Validation Logic:
 ```
-$ curl ngip.io/<your unique check token>/key/value
+$ curl api.ngip.io/ping/<your unique check token>/key/value
 OK
 
 $ curl -d "param1=value1&param2=value2" -H "Content-Type: application/x-www-form-urlencoded" -X POST  ngip.io/<your unique check token>
