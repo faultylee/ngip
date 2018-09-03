@@ -57,7 +57,7 @@ Based on my calculation, up until today, I've spent about 150 hours on building 
 If I'm tasked to build a similar project from scratch, I expect to take between 75 to 100 hours to reach the current state.   
 
 ## Conlusion
-The main take away from this project is the need to understand the paradigm shift from going cloud and how to take advantage of DevOps to increase quality and efficiency. With the increasing pace of technology progression, we need to work smarter and not harder to keep up. 
+The key take away from this project is that hands on play big role in terms of learning new technology. Secondly is the need to understand the paradigm shift from going to cloud. With the increasing pace of technology progression, we need to work smarter and not harder to keep up, such as using DevOps to increase quality and efficiency of delivery. 
 
 
 
@@ -66,3 +66,54 @@ Updated diagram to reflect on what has actually been provisioned
 ![Infra](docs/images/ngip%20-%20solution%20architecture-Infra-Shared-v0.1.png)
 
 ![Infra](docs/images/ngip%20-%20solution%20architecture-Application-v0.1.png)
+
+## Project file structure
+
+#### Overview 
+
+```
+├── docs                # reference documents
+├── scripts             # helper scripts, not related to application directly
+├── stack               # infrastructure code based on Chef and Terraform
+│   ├── aws          
+│   │   ├── jenkins     # infra code for Jenkins instance, for state tracking only
+│   │   ├── middleware  # infra code for middleware - django, ecs
+│   │   ├── ping        # infra code for lambda
+│   │   └── shared      # shared infra code - vpc, subnet, elb, peering
+│   └── cookbooks       # code for Chef
+└── web                 # main application code, docker-compose's root
+    ├── frontend        # Vue.js code for static SPA
+    ├── middleware      # code for REST endpoint, django & ceelery
+    └── ping            # code for lmabda - ping api
+
+```
+
+#### Infrasture 
+
+```
+NOTE: Terraform will always load all *.tf files, and state storage cannot have variable
+hence it must be place in a separate folder. During CI/CD each environment .tf file will
+be copy out and replace local.tf
+
+├── environment         # Environment specific S3 state storage config
+│   ├── prod.tf         
+│   └── stage.tf
+├── local.tf            # S3 state storage config
+├── main.tf             # main infra code file
+├── prod.tfvars         # prod specific variables     * require -var-files
+├── stage.tfvars        # staging specific variables  * require -var-files
+└── terraform.tfvars    # local testing variables     * load by defaul
+
+```
+
+#### Docker-Compose
+
+docker-compose.yml file in the `web` folder will load a locally testable stack consisting of:
+- PostgreSQL
+- Redis 
+- Django with Gunicorn, REST Endpoint & Admin UI
+- Celery Worker - background async worker
+- Celery Camera - to capture tasks results
+- Celery Beat - to handle scheduling
+- Ping - Simulated lambda using Flask - API endpoint
+- Nginx - reverse proxy and static file server
