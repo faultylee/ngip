@@ -405,9 +405,11 @@ resource "aws_iam_instance_profile" "ngip-ecr-readonly-profile" {
 }
 
 output "ngip-vpc-id" { value = "${aws_vpc.ngip-vpc.id}" }
+output "ngip-elb-target-group-id" { value = "${aws_lb_target_group.ngip-web.id}" }
 output "ngip-db-address" { value = "${aws_db_instance.ngip-db.0.address}" }
 output "ngip-redis-address" { value = "${aws_elasticache_replication_group.ngip-redis.primary_endpoint_address}" }
 output "ngip-subnet-pub-id" { value = "${aws_subnet.ngip-subnet-pub.*.id}" }
+output "ngip-subnet-pub-cidr" { value = "${aws_subnet.ngip-subnet-pub.*.cidr_block}" }
 output "ngip-availability-zones" { value = "${aws_subnet.ngip-subnet-pub.*.availability_zone}" }
 output "ngip-ecr-readonly-id" { value = "${aws_iam_instance_profile.ngip-ecr-readonly-profile.id}" }
 output "aws_region" { value = "${var.aws_region}"}

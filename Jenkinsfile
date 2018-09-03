@@ -99,11 +99,11 @@ pipeline {
                         docker-compose up -d
                         sleep 10
                         
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/api/ping/ | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8000/api/ping/1 | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
                             exit 127
                         fi
 
-                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/api/ping/ | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  http://localhost:8080/api/ping/1 | ${AWS_CMD} jq '.name' -r") != "home" ]]; then
                             exit 127
                         fi
 
@@ -193,7 +193,7 @@ pipeline {
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
                         PING=$(eval "${TERRAFORM_CMD} output -json")
-                        echo "$PING" | jq -r '.base_url.value[]' > ping_base_url 
+                        echo "$PING" | jq -r '.base_url.value' > ping_base_url 
                      '''
                     script {
                         PING_BASE_URL = readFile('stack/aws/ping/ping_base_url').trim()
@@ -206,13 +206,14 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
-                        if [[ $(eval "${AWS_CMD} curl -s -L  ''' + PING_BASE_URL + '''/ping/) != "missing token" ]]; then
+                        # Actual deployed Lambda doesn't return json, so jq not needed
+                        if [[ $(eval "${AWS_CMD} curl -s -L  ''' + PING_BASE_URL + '''/ping/") != "missing token" ]]; then
                             exit 127
                         fi
-                        if [[ $(eval "${AWS_CMD} curl -s -L  ''' + PING_BASE_URL + '''/ping/0123456789) != "invalid token" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  ''' + PING_BASE_URL + '''/ping/0123456789") != "invalid token" ]]; then
                             exit 127
                         fi
-                        if [[ $(eval "${AWS_CMD} curl -s -L  ''' + PING_BASE_URL + '''/ping/01234567890) != "invalid token" ]]; then
+                        if [[ $(eval "${AWS_CMD} curl -s -L  ''' + PING_BASE_URL + '''/ping/01234567890") != "invalid token" ]]; then
                             exit 127
                         fi
                      '''

@@ -31,10 +31,20 @@ Below are detail on how I utilized each components:
 - Jenkins - a CI/CD platform, also as a bastion host
 - Travis-CI - after using Jenkins, I've learnt that Travis-CI is definately not suitable for this project. But I still use it to bring up the Jenkins instance when I push code for the first time. I've also setup scheduled pipeline in Jenkins to shutdown itself when idle to better manage the cost. 
 
-Throughout this project, I've learn a lot about AWS Intrastructure, Jenkins and infrastucture provisioning using Terraform. Both Jenkins and Terraform are new to me but I could say now I can use them comfortably. As for Chef, API Gateway, ECS, ASG and IAM configuration, I still can't grasp them fully. I'll require trial and error to get things right. I'll need to spend more time to gain a deeper understanding before I can use them effectively.   
+Throughout this project, I've learn a lot about AWS Intrastructure, Jenkins and infrastucture provisioning using Terraform. Both Jenkins and Terraform are new to me but I could say now I can use them comfortably. 
+
+Below are the area I still can't grasp them fully. I'll require trial and error to get things right. I'll need to spend more time to gain a deeper understanding before I can use them effectively.
+
+- Chef
+- API Gateway
+- NAT Gateway
+- ECS
+- ASG
+- IAM configuration,    
 
 Below are the list of components which I've not priorotize to provision via code or script. Most of this are one time setup, though having the code is still useful for future use:
 
+- NAT Gateway
 - API Gateway Custom domain
 - CloudFront
 - Route53
