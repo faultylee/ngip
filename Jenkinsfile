@@ -182,7 +182,7 @@ pipeline {
                         cp environment/stage.tf ./local.tf
                         eval "${TERRAFORM_CMD} init"
                         eval "${TERRAFORM_CMD} apply --auto-approve -var-file='stage.tfvars' \
-                            -var 'SECRET_KEY=${DJANGO_SECRET_KEY}' \
+                            -var 'SECRET_KEY=${DJANGO_SECRET_KEY}' -var 'AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}' \
                             -var 'ADMIN_EMAIL=${ADMIN_EMAIL}' -var 'ADMIN_NAME=${ADMIN_NAME}' \
                             -var 'AWS_NGIP_ACCESS_KEY_ID=${AWS_NGIP_ACCESS_KEY_ID}' -var 'AWS_NGIP_SECRET_ACCESS_KEY=${AWS_NGIP_SECRET_ACCESS_KEY}' \
                             -var 'POSTGRES_USER=${POSTGRES_USER}' -var 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}' \

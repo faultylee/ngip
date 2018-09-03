@@ -331,9 +331,7 @@ resource "aws_ecs_task_definition" "ngip-web-task" {
       }
     ],
     "command": [
-      {
-        "./docker-entrypoint-web.sh"
-      }
+      "./docker-entrypoint-web.sh"
     ],
     "environment": [ {
       "name": "DJANGO_DEBUG",
@@ -421,9 +419,7 @@ resource "aws_ecs_task_definition" "ngip-worker-task" {
     "essential": true,
     "memory": 256,
     "command": [
-      {
-        "sh -c 'celery -E -A middleware worker --loglevel=info --concurrency=2 -n celery@$ENVIRONMENT'"
-      }
+      "sh -c 'celery -E -A middleware worker --loglevel=info --concurrency=2 -n celery@$ENVIRONMENT'"
     ],
     "environment": [ {
         "name": "DJANGO_DEBUG",
