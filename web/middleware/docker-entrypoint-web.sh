@@ -1,6 +1,6 @@
 #!/bin/bash
 #python manage.py test
-scripts/wait-for-it.sh db:$POSTGRES_PORT
+scripts/wait-for-it.sh $POSTGRES_HOST:$POSTGRES_PORT
 python manage.py connectstatic --no-input
 python manage.py makemigrations
 python manage.py migrate

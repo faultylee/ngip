@@ -155,7 +155,7 @@ pipeline {
                         eval "${TERRAFORM_CMD} apply -auto-approve -var-file='stage.tfvars' -var 'pg_username=${POSTGRES_USER}' -var 'pg_password=${POSTGRES_PASSWORD}'"
                         SHARED=$(eval "${TERRAFORM_CMD} output -json")
                         echo "$SHARED" | jq -r '.["ngip-db-address"].value' > db_address
-                        echo "$SHARED" | jq -r '.["ngip-db-address"].value' > redis_address
+                        echo "$SHARED" | jq -r '.["ngip-redis-address"].value' > redis_address
                      '''
                     script {
                         DB_ADDRESS = readFile('stack/aws/shared/db_address').trim()
