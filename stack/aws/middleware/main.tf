@@ -156,6 +156,7 @@ resource "null_resource" remote-exec-chef-cookbooks {
     }
 
     inline = [
+      "set -x",
       "sudo yum check-update",
       "sudo yum -y update",
       "curl -L https://omnitruck.chef.io/install.sh | sudo bash",
