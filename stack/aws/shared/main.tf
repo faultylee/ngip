@@ -155,7 +155,7 @@ resource "aws_security_group" "ngip-elb-all" {
 
 resource "aws_lb_target_group" "ngip-web" {
   name     = "${local.name_prefix}"
-  port     = 80
+  port     = 8000
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.ngip-vpc.id}"
 
@@ -230,7 +230,7 @@ resource "aws_route53_record" "ngip-web-elb" {
 ########################
 
 resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name               = "${local.name_prefix}rds-enhanced_monitoring-role"
+  name               = "${local.name_prefix}-rds-enhanced_monitoring-role"
   assume_role_policy = "${data.aws_iam_policy_document.rds_enhanced_monitoring.json}"
 }
 
