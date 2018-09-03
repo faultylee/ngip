@@ -84,7 +84,7 @@ pipeline {
 
                     # build static page                    
                     cd ../frontend
-                    eval "${NPM_CMD} /bin/bash -c 'npm install && npm run build_prod'"
+                    eval "${NPM_CMD} /bin/bash -c 'npm install && npm run build_stage'"
 
                     # Cannot use -it with manage.py test
                     # docker run --rm ngip/ngip-middleware-web:latest python manage.py test --settings=middlware.test_settings 
