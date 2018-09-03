@@ -109,6 +109,24 @@ be copy out and replace local.tf
 
 ```
 
+#### Jenkins CI/CD
+
+Jenkinsfile at the root of this project is the main source for the pipeline. Only 2 addtional script which run on outside of the Jenkinsfile.
+
+```
+scripts/start-jenkins-ci.sh                       # Script used at Travis-CI to bring up Jenkins Server
+scripts/check-for-idle-and-shutdown-jenkins.sh    # Scheduled script which shutdown Jenkins server when idle 
+
+```
+Following are the pipelines described by the Jenkinsfile
+- Middleware Build & Test - docker build
+- Middleware Docker Test - docker-compose up and check endpoint is working 
+- Push to ECR & Upload files to S3 - push docker image to ECR, lambda packge and static files to S3
+- Setup Stage Stack - Provision staging infrastructure
+- Stage Stack App Test - endpoint testing
+- Setup Prod Stack (skip unless commit from `master`) - only a placeholder
+- Post Build Clean Up - delete containers, prompt to destroy infrastructure
+
 #### Docker-Compose
 
 docker-compose.yml file in the `web` folder will load a locally testable stack consisting of:
