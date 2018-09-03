@@ -1,0 +1,44 @@
+region: ap-southeast-1
+
+function_name: ping
+handler: service.handler
+description: ngip.io ping function
+runtime: python3.6
+# role: lambda_basic_execution
+
+# S3 upload requires appropriate role with s3:PutObject permission
+# (ex. basic_s3_upload), a destination bucket, and the key prefix
+# bucket_name: 'example-bucket'
+# s3_key_prefix: 'path/to/file/'
+
+# if access key and secret are left blank, boto will use the credentials
+# defined in the [default] section of ~/.aws/credentials.
+aws_access_key_id:
+aws_secret_access_key:
+
+# dist_directory: dist
+# timeout: 15
+# memory_size: 512
+#
+
+# Experimental Environment variables
+environment_variables:
+    REDIS_HOST: ""
+    REDIS_PASSWORD: ""
+    REDIS_DB: "0"
+    REDIS_USE_SSL: "0"
+    REDIS_SSL_KEYFILE: ""
+    REDIS_SSL_CERTFILE: ""
+    REDIS_SSL_CERT_REQ: ""
+    REDIS_SSL_CA_CERTS: ""
+
+# If `tags` is uncommented then tags will be set at creation or update
+# time.  During an update all other tags will be removed except the tags
+# listed here.
+#tags:
+#    tag_1: foo
+#    tag_2: bar
+
+# Build options
+build:
+  source_directories: redis # a comma delimited list of directories in your project root that contains source to package.
