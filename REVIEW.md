@@ -7,11 +7,13 @@ To demonstrate my understanding of end-to-end cloud based application and abilit
 As a playground for me to learn new technology and explore different approaches to existing IT problems.
 
 ## Executive Summary
-At the current stage of this project, I've made use of various DevOps tool set and able to deploy a cloud application build on top of Django, Celery and Vue.js to AWS infrastructure. Although this is my first time deploying an application which utilizes Jenkins, Terra form, Chef, EC2, ECS, Lambda, ELB, Redis, RDS all at the same time, the prior experience from one premise application architecture does help reduce my learning time. Most enterprise best practices still applies on a typical cloud application. 
+At the current stage of this project, I've made use of various DevOps tool set and able to deploy a cloud application build on top of Django, Celery and Vue.js to AWS infrastructure. Although this is my first time deploying an application which utilizes Jenkins, Terraform, Chef, EC2, ECS, Lambda, ELB, Redis, RDS all at the same time, the prior experience from one premise application architecture does help reduce my learning time. Most enterprise best practices still applies on a typical cloud application. 
  
 ## Detail
 
 During the initial stage, I've spent about 1/3 of the time figuring out Jenkins and Terraform and also how to piece everything together while utilizing the key components identified. At the later stage when I gained a better understanding on the tools and what else is missing from my initial design, I start to make progress and was able to bring up the staging environment automatically using Jenkins. The later part is fine-tuning and complete enough of the main application so that it's presentable.
+
+The state of the code discussed here is in the `review` branch.
 
 Below are detail on how I utilized each component:
 
@@ -42,6 +44,8 @@ Below are the area I've yet to grasp them fully. I'll require trial and error to
 - ASG
 - IAM configuration   
 
+Chef Solo bootstraping on EC2 with docker startup is not working at this moment. I plan to study more then retry this in the future, and making use of UserData on EC2 for automatic bootstraping.  
+
 Below are the list of components which I've not prioritized to provision via code or script. Most of this are one time setup, though having the code is still useful for future use:
 
 - IAM configuration   
@@ -59,9 +63,15 @@ The application itself still need more work, such as authentication, unit testin
 Based on my calculation, up until today, I've spent about 150 hours on building **ngip** from scratch.
 If I'm tasked to build a similar project again, I expect to take between 75 and 100 hours to reach the current state. Possibly shorter after a few iterations.  
 
+## Learning Points
+I've learnt a few concept which differ from my usual on-prem design
+- To cater for scalability, most components are dynamically created, which lacks visibility, provisioning tools help greatly in this
+- Permission can be applied to individual component or service instead of configured into application, which ease configuration and security management, though the application have to understand this. I still find lack of support in this area where frameworks or libraries insist on having the credential configured in code
+- Passing configurations is tricky across provisioning boundary, i.e. from infrastucture to application
+- Proper planning of credential segregation is very important to avoid accidental exposure
+
 ## Conclusion
 The key take away from this project is that hands on play big role in terms of learning new technology. Secondly is the need to understand the paradigm shift from going to cloud. With the increasing pace of technology progression, we need to work smarter and not harder to keep up, such as using DevOps to increase quality and efficiency of delivery. 
-
 
 
 ## Appendix
