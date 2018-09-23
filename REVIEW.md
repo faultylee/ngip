@@ -1,5 +1,5 @@
 # Interview Take Home Project
-
+Note: I've made additional updates to the project at the `review-2018-09-24` branch, [here](review-2018-09-24/REVIEW.md) is the 2nd review write-up. The remaining of this review is unchanged since the first submission.
 ## Objective
 ### Primary
 To demonstrate my understanding of end-to-end cloud based application and ability to utilize DevOps tool set to set up and deploy to the cloud.
@@ -7,7 +7,7 @@ To demonstrate my understanding of end-to-end cloud based application and abilit
 As a playground for me to learn new technology and explore different approaches to existing IT problems.
 
 ## Executive Summary
-At the current stage of this project, I've made use of various DevOps tool set and able to deploy a cloud application build on top of Django, Celery and Vue.js to AWS infrastructure. Although this is my first time deploying an application which utilizes Jenkins, Terraform, Chef, EC2, ECS, Lambda, ELB, Redis, RDS all at the same time, the prior experience from one premise application architecture does help reduce my learning time. Most enterprise best practices still applies on a typical cloud application. 
+At the current stage of this project, I've made use of various DevOps tool set and able to deploy a cloud application build on top of Django, Celery and Vue.js to AWS infrastructure. Although this is my first time deploying an application which utilizes Jenkins, Terraform, Chef, EC2, ECS, Lambda, ELB, Redis, RDS all at the same time, the prior experience from on premise application architecture does help reduce my learning time. Most enterprise best practices still applies on a typical cloud application. 
  
 ## Detail
 
