@@ -274,9 +274,9 @@ pipeline {
         always {
             script {
                 sh '''
-                        # reset file/dirs permission to allow next round of git cleanup
-                        sudo chown -R tomcat:tomcat .
-                    '''
+                    # reset file/dirs permission to allow next round of git cleanup
+                    sudo chown -R tomcat:tomcat .
+                '''
                 echo "${currentBuild.currentResult}"
                 def destroy = true
                 try {
@@ -351,6 +351,11 @@ pipeline {
                         eval "${AWS_CMD} aws s3 cp build.log s3://ngip-build-output/build.log --acl public-read --content-type 'text/plain'"
                       '''
                 }
+                sh '''
+                    # do this again since terraform might create some new files
+                    # reset file/dirs permission to allow next round of git cleanup
+                    sudo chown -R tomcat:tomcat .
+                '''
                 //publish_cloudwatch_logs(logStreamName: "ngip-" + BRANCH_NAME)
             }
         }
