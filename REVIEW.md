@@ -1,6 +1,6 @@
 # Interview Take Home Project
 
-Note: I've made additional updates to the project at the `review-2018-09-25` branch, [here](review-2018-09-25/REVIEW.md) is the 2nd review write-up. The remaining of this review is unchanged since the first submission.
+Note: I've made additional updates to the project at the `review-2018-09-25` branch, [here](../review-2018-09-25/REVIEW.md) is the 2nd review write-up. The remaining of this review is unchanged since the first submission.
 
 ## Objective
 ### Primary
