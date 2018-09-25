@@ -281,6 +281,7 @@ resource "aws_launch_configuration" "ngip-web-asg" {
 }
 
 # Instances are scaled across availability zones http://docs.aws.amazon.com/autoscaling/latest/userguide/auto-scaling-benefits.html
+# TODO: EC2 instances doesn't termnate when destroying asg
 resource "aws_autoscaling_group" "ngip-web-asg" {
   name = "${local.name_prefix}-web"
   max_size = "${var.max_size}"
