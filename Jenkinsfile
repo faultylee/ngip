@@ -302,14 +302,30 @@ pipeline {
                         docker-compose rm -fs
                         docker logout {$REGISTRY_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
                     '''
-                    withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    withCredentials([
+                        usernamePassword(credentialsId: 'DJANGO_ADMIN', passwordVariable: 'ADMIN_EMAIL', usernameVariable: 'ADMIN_NAME'),
+                        string(credentialsId: 'AWS_ACCESS_KEY_ID_EC2', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'AWS_SECRET_ACCESS_KEY_EC2', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(credentialsId: 'DJANGO_SECRET_KEY', variable: 'DJANGO_SECRET_KEY'),
+                        string(credentialsId: 'AWS_NGIP_ACCESS_KEY_ID', variable: 'AWS_NGIP_ACCESS_KEY_ID'),
+                        string(credentialsId: 'AWS_NGIP_SECRET_ACCESS_KEY', variable: 'AWS_NGIP_SECRET_ACCESS_KEY'),
+                        usernamePassword(credentialsId: 'POSTGRES_USER', passwordVariable: 'POSTGRES_PASSWORD', usernameVariable: 'POSTGRES_USER')
+
+                    ]) {
                         sh '''
                             cd stack/aws/middleware
                             rm local.tf
                             cp environment/stage.tf ./local.tf
                             # init is required in case earlier pipeline failed, and git cleaned the local state file, causing destroy to fail
                             eval "${TERRAFORM_CMD} init"
-                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" | true
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars' \
+                                -var 'SECRET_KEY=${DJANGO_SECRET_KEY}' -var 'AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}' \
+                                -var 'ADMIN_EMAIL=${ADMIN_EMAIL}' -var 'ADMIN_NAME=${ADMIN_NAME}' \
+                                -var 'AWS_NGIP_ACCESS_KEY_ID=${AWS_NGIP_ACCESS_KEY_ID}' -var 'AWS_NGIP_SECRET_ACCESS_KEY=${AWS_NGIP_SECRET_ACCESS_KEY}' \
+                                -var 'POSTGRES_USER=${POSTGRES_USER}' -var 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}' \
+                                -var 'POSTGRES_HOST=''' + DB_ADDRESS + '''' -var 'REDIS_HOST=''' + REDIS_ADDRESS + '''' \
+                                -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
+                            #eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" || true
                           '''
                         sh '''
                             cd stack/aws/middleware
@@ -317,7 +333,7 @@ pipeline {
                             cp environment/stage.tf ./local.tf
                             # init is required in case earlier pipeline failed, and git cleaned the local state file, causing destroy to fail
                             eval "${TERRAFORM_CMD} init"
-                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" | true
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" || true
                           '''
                         sh '''
                             cd stack/aws/shared
@@ -325,7 +341,7 @@ pipeline {
                             cp environment/stage.tf ./local.tf
                             # init is required in case earlier pipeline failed, and git cleaned the local state file, causing destroy to fail
                             eval "${TERRAFORM_CMD} init"
-                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" | true
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" || true
                           '''
                     }
                 }
