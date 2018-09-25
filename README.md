@@ -30,6 +30,10 @@ Typical monitoring use cases are:
 #### 2018-07-15
 - Updated
   - Added private subnet in infra diagram
+#### 2018-07-15
+- [First Review Write-up](../review/REVIEW.md)
+#### 2018-09-25
+- [Review 2018-09-25](../review-2018-09-25/REVIEW.md)
     
 
 ## Background
