@@ -313,6 +313,14 @@ pipeline {
 
                     ]) {
                         sh '''
+                            cd stack/aws/ping
+                            rm local.tf
+                            cp environment/stage.tf ./local.tf
+                            # init is required in case earlier pipeline failed, and git cleaned the local state file, causing destroy to fail
+                            eval "${TERRAFORM_CMD} init"
+                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars' -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''" || true
+                          '''
+                        sh '''
                             cd stack/aws/middleware
                             rm local.tf
                             cp environment/stage.tf ./local.tf
@@ -326,14 +334,6 @@ pipeline {
                                 -var 'POSTGRES_HOST=''' + DB_ADDRESS + '''' -var 'REDIS_HOST=''' + REDIS_ADDRESS + '''' \
                                 -var 'git_sha_pretty=''' + GIT_SHA_PRETTY + ''''"
                             #eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" || true
-                          '''
-                        sh '''
-                            cd stack/aws/middleware
-                            rm local.tf
-                            cp environment/stage.tf ./local.tf
-                            # init is required in case earlier pipeline failed, and git cleaned the local state file, causing destroy to fail
-                            eval "${TERRAFORM_CMD} init"
-                            eval "${TERRAFORM_CMD} destroy --auto-approve -var-file='stage.tfvars'" || true
                           '''
                         sh '''
                             cd stack/aws/shared

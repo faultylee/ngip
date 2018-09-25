@@ -204,6 +204,7 @@ resource "aws_ecs_cluster" "ngip-web-cluster" {
 resource "aws_iam_role_policy" "ngip-web-ecs-policy" {
   name = "ecs_instance_role"
   role = "${aws_iam_role.ngip-web-ecs-role.id}"
+  depends_on = ["aws_iam_role.ngip-web-ecs-role"]
   policy = <<EOF
 {
   "Version": "2012-10-17",
