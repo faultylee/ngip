@@ -1,7 +1,7 @@
 # Interview Take Home Project
 ## Review 2018-09-25
 
-NOTE: The first review write up is accessible [here]([here](../review/REVIEW.md))
+NOTE: The first review write up is accessible [here](../review/REVIEW.md)
 
 I've found a bug with the build script where I was using the pipe `|` instead of ORing with `||` to ignore errors with the `terraform destroy` commands. I've also missed out some required variable in the terraform destroy script resulting it terraform not being able to destroy the stack. I extracted a complete build log with terraform apply from cold start to destroy in one single process.
 
